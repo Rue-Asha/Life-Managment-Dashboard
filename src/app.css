@@ -71,8 +71,8 @@ body {
 	background: var(--ground);
 	color: var(--ink);
 	font-family: var(--font-ui);
-	font-size: 15px;
-	line-height: 1.55;
+	font-size: 16px;
+	line-height: 1.6;
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
 }
@@ -147,12 +147,12 @@ button {
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	font-size: 14px;
+	font-size: 14.5px;
 	font-weight: 500;
 	color: var(--ink2);
 	text-decoration: none;
 	border-radius: var(--r-sm);
-	padding: 8px 11px;
+	padding: 9px 11px;
 	transition:
 		background var(--dur) var(--ease),
 		color var(--dur) var(--ease),
@@ -277,7 +277,7 @@ main {
 
 /* ---------- typography ---------- */
 .eyebrow {
-	font-size: 11px;
+	font-size: 11.5px;
 	font-weight: 600;
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
@@ -294,7 +294,7 @@ main {
 h1 {
 	font-family: var(--font-display);
 	font-weight: 700;
-	font-size: 27px;
+	font-size: 29px;
 	letter-spacing: -0.02em;
 	line-height: 1.2;
 	margin: 0 0 4px;
@@ -303,12 +303,12 @@ h1 {
 .lede {
 	color: var(--ink2);
 	margin: 0 0 26px;
-	font-size: 15px;
+	font-size: 15.5px;
 	max-width: 70ch;
 	line-height: 1.6;
 }
 h2.sect {
-	font-size: 12px;
+	font-size: 12.5px;
 	font-weight: 600;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
@@ -391,7 +391,7 @@ h2.sect::after {
 	transform: translateY(-1px);
 }
 .card h3 {
-	font-size: 13.5px;
+	font-size: 14.5px;
 	font-weight: 600;
 	color: var(--ink);
 	margin: 0 0 12px;
@@ -432,17 +432,17 @@ h2.sect::after {
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
-	font-size: 12px;
+	font-size: 12.5px;
 	font-weight: 500;
 	color: var(--ink2);
 	background: var(--surface2);
 	border-radius: 999px;
-	padding: 3px 10px;
+	padding: 3px 11px;
 	white-space: nowrap;
 }
 .chip.mono {
 	font-family: var(--font-mono);
-	font-size: 11.5px;
+	font-size: 12px;
 }
 .chip.accent {
 	background: var(--accent-soft);
@@ -453,7 +453,7 @@ h2.sect::after {
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
-	font-size: 12px;
+	font-size: 12.5px;
 	font-weight: 600;
 	white-space: nowrap;
 	color: var(--ink2);
@@ -582,7 +582,7 @@ form.inline {
 }
 .due {
 	font-family: var(--font-mono);
-	font-size: 12px;
+	font-size: 12.5px;
 	color: var(--ink2);
 	white-space: nowrap;
 	font-variant-numeric: tabular-nums;
@@ -601,14 +601,14 @@ form.inline {
 	margin: 0 0 18px;
 }
 .fchip {
-	font-size: 13px;
+	font-size: 13.5px;
 	font-weight: 500;
 	font-family: var(--font-ui);
 	color: var(--ink2);
 	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: 999px;
-	padding: 5px 14px;
+	padding: 6px 15px;
 	cursor: pointer;
 	text-decoration: none;
 	display: inline-flex;
@@ -644,14 +644,14 @@ form.inline {
 	justify-content: center;
 	gap: 6px;
 	font-family: var(--font-ui);
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 600;
 	color: var(--accent-ink);
 	background: var(--accent);
 	border: 1px solid var(--accent);
 	border-radius: var(--r-md);
-	padding: 8px 16px;
-	min-height: 36px;
+	padding: 9px 17px;
+	min-height: 38px;
 	cursor: pointer;
 	white-space: nowrap;
 	text-decoration: none;
@@ -724,7 +724,7 @@ form.inline {
 	min-width: 0;
 }
 .field > span {
-	font-size: 12.5px;
+	font-size: 13px;
 	font-weight: 500;
 	color: var(--ink2);
 }
@@ -738,13 +738,13 @@ input[type='url'],
 select,
 textarea {
 	font-family: var(--font-ui);
-	font-size: 14.5px;
+	font-size: 15px;
 	color: var(--ink);
 	background: var(--surface);
 	border: 1px solid var(--line-strong);
 	border-radius: var(--r-md);
-	padding: 8px 11px;
-	min-height: 36px;
+	padding: 9px 12px;
+	min-height: 38px;
 	color-scheme: light dark;
 	transition:
 		border-color var(--dur) var(--ease),
@@ -775,10 +775,10 @@ label.check {
 	display: inline-flex;
 	align-items: center;
 	gap: 7px;
-	font-size: 13.5px;
+	font-size: 14px;
 	font-weight: 500;
 	color: var(--ink2);
-	min-height: 36px;
+	min-height: 38px;
 	cursor: pointer;
 }
 .form-error {
@@ -857,7 +857,7 @@ label.check {
 		flex-direction: column;
 	}
 	h1 {
-		font-size: 23px;
+		font-size: 25px;
 	}
 	.field {
 		flex: 1 1 160px;
@@ -882,7 +882,7 @@ label.check {
 }
 
 .small {
-	font-size: 13px;
+	font-size: 13.5px;
 }
 
 .nums {
@@ -897,7 +897,7 @@ label.check {
 table {
 	width: 100%;
 	border-collapse: collapse;
-	font-size: 14px;
+	font-size: 15px;
 }
 
 th {

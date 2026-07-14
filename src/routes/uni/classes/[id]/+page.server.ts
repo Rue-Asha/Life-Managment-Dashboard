@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import {
 	getClass,
 	updateClass,
+	updateClassDescription,
 	deleteClass,
 	listClassTasks,
 	createUniTask,
@@ -41,6 +42,9 @@ export const actions: Actions = {
 			archiveUrl: strOrNull(data, 'archive_url'),
 			status: oneOf(data, 'status', CLASS_STATUSES)
 		});
+	}),
+	updateDescription: action((event, data) => {
+		updateClassDescription(Number(event.params.id), strOrNull(data, 'description'));
 	}),
 	delete: (event) => {
 		const cls = getClass(Number(event.params.id));

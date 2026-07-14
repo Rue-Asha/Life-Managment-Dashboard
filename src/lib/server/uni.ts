@@ -22,6 +22,7 @@ export interface Class {
 	status: ClassStatus;
 	color: string | null;
 	archive_url: string | null;
+	description: string | null;
 	document_id: number | null;
 	open_tasks: number;
 }
@@ -161,6 +162,11 @@ export function updateClass(id: number, input: ClassInput & { status: ClassStatu
 		);
 }
 
+/** Free-text description lives in its own box on the class detail page. */
+export function updateClassDescription(id: number, description: string | null): void {
+	getDb().prepare('UPDATE classes SET description = ? WHERE id = ?').run(description, id);
+}
+
 /** Tasks of the class survive with class_id = NULL (ON DELETE SET NULL). */
 export function deleteClass(id: number): void {
 	getDb().prepare('DELETE FROM classes WHERE id = ?').run(id);
@@ -211,9 +217,9 @@ export function listUniTasks(filter: UniTaskFilter = {}): UniTask[] {
 		.prepare(
 			`${WITH_CLASS}
 			 ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-			 ORDER BY CASE ut.status WHEN 'in_progress' THEN 0 WHEN 'todo' THEN 1
-			                          WHEN 'backlog' THEN 2 WHEN 'done' THEN 3 ELSE 4 END,
-			          ${SORT}`
+			 ORDER BY CASE ut.task_type WHEN 'exc' THEN 0 WHEN 'vl' THEN 1
+			                             WHEN 'qz' THEN 2 WHEN 'ch' THEN 3 ELSE 4 END,
+			          ut.title COLLATE NOCASE`
 		)
 		.all(...params) as unknown as UniTask[];
 }

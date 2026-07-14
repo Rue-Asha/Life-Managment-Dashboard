@@ -14,7 +14,7 @@
 	}
 </script>
 
-<svelte:head><title>TO-DOs · Zentrale</title></svelte:head>
+<svelte:head><title>To-Do-List · Zentrale</title></svelte:head>
 
 {#snippet editRow(task: Task)}
 	<form
@@ -102,7 +102,7 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow">TO-DOs</p>
+		<p class="eyebrow">To-Do-List</p>
 		<h1>Alltag &amp; Orga</h1>
 		<p class="lede" style="margin-bottom:0;">
 			Eigene Datenbank. <strong>Uni</strong> heißt hier: organisatorische To-dos — Lernaufgaben

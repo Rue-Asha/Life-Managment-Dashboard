@@ -32,7 +32,7 @@
 
 	const nav = $derived([
 		{ href: '/', icon: 'home', label: 'Home', count: null as number | null },
-		{ href: '/tasks', icon: 'tasks', label: 'TO-DOs', count: data.weekOpen },
+		{ href: '/tasks', icon: 'tasks', label: 'To-Do-List', count: data.weekOpen },
 		{ href: '/uni', icon: 'uni', label: 'Uni', count: data.uniWeekOpen },
 		{ href: '/finance', icon: 'finance', label: 'Finanzen', count: null },
 		{ href: '/notes', icon: 'notes', label: 'Notes', count: data.inboxCount },
