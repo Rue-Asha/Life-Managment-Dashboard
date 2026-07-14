@@ -26,7 +26,7 @@
 	<title>Fixkosten & Raten · Zentrale</title>
 </svelte:head>
 
-<p class="eyebrow">💰 Finanzen</p>
+<p class="eyebrow">Finanzen</p>
 <h1>Fixkosten &amp; Raten</h1>
 <FinanceNav />
 
@@ -231,9 +231,8 @@
 						<input type="date" name="end_date" />
 					</label>
 				{/if}
-				<label class="field">
-					<span>&nbsp;</span>
-					<span><input type="checkbox" name="active" checked /> aktiv</span>
+				<label class="check">
+					<input type="checkbox" name="active" checked /> aktiv
 				</label>
 				<div class="field">
 					<span>&nbsp;</span>

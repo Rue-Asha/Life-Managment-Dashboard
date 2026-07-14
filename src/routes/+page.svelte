@@ -19,7 +19,7 @@
 		data.stats.total === 0 ? 0 : Math.round((data.stats.done / data.stats.total) * 100)
 	);
 
-	const SOURCE_LABELS = { alltag: '⚡ Alltag', uni: '🎓 Uni' } as const;
+	const SOURCE_LABELS = { alltag: 'Alltag', uni: 'Uni' } as const;
 </script>
 
 <svelte:head><title>Zentrale</title></svelte:head>
@@ -30,7 +30,7 @@
 
 <div class="grid cols-3">
 	<div class="card span-2">
-		<h3>⚡ This Week</h3>
+		<h3>This Week</h3>
 		{#if data.weekOpen.length === 0 && data.weekDone.length === 0}
 			<p class="dim">
 				Noch nichts für diese Woche geplant — in <a href="/tasks">Tasks</a> oder
@@ -87,15 +87,15 @@
 				<span class="num">This Week · {data.stats.done}/{data.stats.total} erledigt</span>
 			</div>
 		{/if}
-		<a class="more" href="/tasks">⚡ Alle Tasks →</a>
-		<a class="more" href="/uni" style="margin-left:14px;">🎓 Uni Management →</a>
+		<a class="more" href="/tasks">Alle Tasks →</a>
+		<a class="more" href="/uni" style="margin-left:14px;">Uni Management →</a>
 	</div>
 
 	<div class="card">
-		<h3>📅 Kalender · Proton</h3>
+		<h3>Kalender · Proton</h3>
 		{#if data.inboxCount > 0}
 			<p class="dim" style="margin:0 0 12px; font-size:13.5px;">
-				📥 <a href="/notes">{data.inboxCount}
+				<a href="/notes">{data.inboxCount}
 					{data.inboxCount === 1 ? 'Notiz' : 'Notizen'} in der Inbox</a> — sonntags einsortieren.
 			</p>
 		{/if}
@@ -135,7 +135,7 @@
 	</div>
 
 	<div class="card span-2">
-		<h3>💰 Netto-Vermögen</h3>
+		<h3>Netto-Vermögen</h3>
 		<p class="mono" style="font-size:34px; font-weight:650; margin:0 0 10px; letter-spacing:-0.02em;">
 			{formatCentsWhole(data.netWorthCents)}
 		</p>
@@ -156,11 +156,11 @@
 				Keine Zahlungen in den nächsten 14 Tagen fällig.
 			</p>
 		{/if}
-		<a class="more" href="/finance">💰 Zum Finanz-Dashboard →</a>
+		<a class="more" href="/finance">Zum Finanz-Dashboard →</a>
 	</div>
 
 	<div class="card">
-		<h3>🧭 Heute · Schedule</h3>
+		<h3>Heute · Schedule</h3>
 		{#if data.today?.day}
 			<p style="margin:0 0 4px;">
 				<strong>{data.today.day.day_label ?? '—'}</strong>
@@ -198,7 +198,7 @@
 				Keine aktive Phase — im <a href="/curriculum">Curriculum</a> anlegen.
 			</p>
 		{/if}
-		<a class="more" href="/curriculum">🧭 Zum Schedule →</a>
+		<a class="more" href="/curriculum">Zum Schedule →</a>
 	</div>
 </div>
 

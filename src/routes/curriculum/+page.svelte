@@ -38,7 +38,7 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow">🧭 Curriculum</p>
+		<p class="eyebrow">Curriculum</p>
 		<h1>Schedule{#if data.phase} — {data.phase.name}{/if}</h1>
 		{#if data.phase?.subtitle}
 			<p class="lede" style="margin-bottom:0;">{data.phase.subtitle}</p>
@@ -426,8 +426,9 @@
 
 	.prio {
 		border: 1px solid var(--line);
-		border-radius: 10px;
+		border-radius: var(--r-md);
 		background: var(--surface);
+		box-shadow: var(--shadow-sm);
 		padding: 9px 14px;
 	}
 
@@ -469,7 +470,8 @@
 	.bcard {
 		background: var(--surface);
 		border: 1px solid var(--line);
-		border-radius: 12px;
+		border-radius: var(--r-md);
+		box-shadow: var(--shadow-sm);
 		padding: 12px 14px;
 		font-size: 14px;
 	}

@@ -23,7 +23,7 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow">💰 Finanzen</p>
+		<p class="eyebrow">Finanzen</p>
 		<h1>Rücklagen &amp; Ziele</h1>
 	</div>
 	{#if data.goals.length > 0}

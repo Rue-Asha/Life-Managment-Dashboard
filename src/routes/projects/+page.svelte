@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import PrioritySelect from '$lib/PrioritySelect.svelte';
 	import { formatDate } from '$lib/format';
 	import {
 		PRIORITY_LABELS,
@@ -22,9 +23,9 @@
 	);
 
 	const views = [
-		{ id: 'grid', label: '🞔 Kacheln' },
-		{ id: 'list', label: '☰ Liste' },
-		{ id: 'board', label: '▦ Board' }
+		{ id: 'grid', label: 'Kacheln' },
+		{ id: 'list', label: 'Liste' },
+		{ id: 'board', label: 'Board' }
 	] as const;
 </script>
 
@@ -78,7 +79,7 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow">💻 Projects</p>
+		<p class="eyebrow">Projects</p>
 		<h1>IT Projects</h1>
 	</div>
 	<div class="filters" style="margin:0;">
@@ -202,15 +203,7 @@
 					{/each}
 				</select>
 			</label>
-			<label class="field">
-				<span>Priorität</span>
-				<select name="priority">
-					<option value="">—</option>
-					<option value="high">▲ Hoch</option>
-					<option value="medium">■ Mittel</option>
-					<option value="low">▽ Niedrig</option>
-				</select>
-			</label>
+			<PrioritySelect />
 			<label class="field" style="min-width:180px;">
 				<span>Tech-Stack</span>
 				<input type="text" name="tech_stack" placeholder="SvelteKit · SQLite" />
@@ -240,8 +233,9 @@
 	.mini-select {
 		font-size: 12px;
 		padding: 3px 6px;
+		min-height: 26px;
 		border: 1px solid var(--line);
-		border-radius: 7px;
+		border-radius: var(--r-sm);
 		background: var(--surface);
 		color: inherit;
 	}
@@ -271,9 +265,19 @@
 	.bcard {
 		background: var(--surface);
 		border: 1px solid var(--line);
-		border-radius: 12px;
+		border-radius: var(--r-md);
+		box-shadow: var(--shadow-sm);
 		padding: 12px 14px;
 		margin-bottom: 10px;
 		font-size: 14px;
+	}
+
+	.bcard a {
+		color: var(--ink);
+		text-decoration: none;
+	}
+
+	.bcard a:hover {
+		color: var(--accent);
 	}
 </style>

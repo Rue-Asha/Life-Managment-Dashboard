@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import PrioritySelect from '$lib/PrioritySelect.svelte';
 	import { formatDate, formatDeadline, daysUntil } from '$lib/format';
 	import { CLASS_STATUS_LABELS, PRIORITY_LABELS, UNI_TASK_TYPE_LABELS } from '$lib/labels';
 	import type { UniTask } from '$lib/server/uni';
@@ -59,11 +60,11 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow">🎓 Uni</p>
+		<p class="eyebrow">Uni</p>
 		<h1>Uni Management</h1>
 	</div>
 	<div class="actions">
-		<a class="btn ghost" href="/uni/tasks">☰ Task-Datenbank →</a>
+		<a class="btn ghost" href="/uni/tasks">Task-Datenbank →</a>
 	</div>
 </div>
 
@@ -92,7 +93,7 @@
 			<button class="btn">＋ Anlegen</button>
 		</form>
 		{#if selectedSemester}
-			<span class="filters sep"></span>
+			<span class="sep"></span>
 			<form class="inline" method="POST" action="?/semesterStatus" use:enhance>
 				<input type="hidden" name="id" value={selectedSemester.id} />
 				<input
@@ -139,7 +140,7 @@
 						<span class="badge {CLASS_STATUS_LABELS[cls.status].tone}"
 							>{CLASS_STATUS_LABELS[cls.status].label}</span
 						>
-						{#if cls.open_tasks > 0}<span class="chip">⚡ {cls.open_tasks} offen</span>{/if}
+						{#if cls.open_tasks > 0}<span class="chip">{cls.open_tasks} offen</span>{/if}
 					</p>
 					<p class="dim mono" style="margin:0; font-size:13px; line-height:1.9;">
 						{#if cls.professor}{cls.professor}<br />{/if}
@@ -163,7 +164,7 @@
 		</div>
 	{/if}
 
-	<details class="editor" open={data.classes.length === 0}>
+	<details class="editor" open={data.classes.length === 0} style="margin-top:14px;">
 		<summary>＋ Class anlegen</summary>
 		<form method="POST" action="?/createClass" use:enhance>
 			<input type="hidden" name="semester_id" value={selectedSemester.id} />
@@ -231,15 +232,7 @@
 					{/each}
 				</select>
 			</label>
-			<label class="field">
-				<span>Priorität</span>
-				<select name="priority">
-					<option value="">—</option>
-					<option value="high">▲ Hoch</option>
-					<option value="medium">■ Mittel</option>
-					<option value="low">▽ Niedrig</option>
-				</select>
-			</label>
+			<PrioritySelect />
 			<label class="field">
 				<span>Deadline</span>
 				<input type="date" name="deadline" />
@@ -265,7 +258,7 @@
 			{/each}
 		</div>
 	{/if}
-	<a class="more" href="/uni/tasks">☰ Volle Task-Datenbank →</a>
+	<a class="more" href="/uni/tasks">Volle Task-Datenbank →</a>
 </div>
 
 <style>

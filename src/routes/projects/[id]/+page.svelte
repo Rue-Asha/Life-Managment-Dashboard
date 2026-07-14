@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import Editor from '$lib/editor/Editor.svelte';
+	import PrioritySelect from '$lib/PrioritySelect.svelte';
 	import {
-		PRIORITIES,
-		PRIORITY_LABELS,
 		PROJECT_STATUSES,
 		PROJECT_STATUS_LABELS,
 		PROJECT_TYPES,
@@ -21,7 +20,7 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow"><a href="/projects">💻 Projects</a></p>
+		<p class="eyebrow"><a href="/projects">Projects</a></p>
 		<h1>{data.project.name}</h1>
 		<p class="lede" style="margin-bottom:0;">
 			<span class="badge {PROJECT_STATUS_LABELS[data.project.status].tone}"
@@ -69,17 +68,7 @@
 					{/each}
 				</select>
 			</label>
-			<label class="field">
-				<span>Priorität</span>
-				<select name="priority">
-					<option value="">—</option>
-					{#each PRIORITIES as priority (priority)}
-						<option value={priority} selected={data.project.priority === priority}
-							>{PRIORITY_LABELS[priority].label}</option
-						>
-					{/each}
-				</select>
-			</label>
+			<PrioritySelect value={data.project.priority} />
 			<label class="field" style="min-width:170px;">
 				<span>Tech-Stack</span>
 				<input type="text" name="tech_stack" value={data.project.tech_stack ?? ''} />

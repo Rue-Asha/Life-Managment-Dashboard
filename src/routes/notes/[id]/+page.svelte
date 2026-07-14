@@ -15,11 +15,11 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow"><a href="/notes">🔒 Notes</a></p>
+		<p class="eyebrow"><a href="/notes">Notes</a></p>
 		<h1>{data.note.title}</h1>
 		<p class="lede" style="margin-bottom:0;">
 			{#if data.note.inbox}
-				<span class="badge warn">📥 Inbox — Bereich wählen zum Einsortieren</span>
+				<span class="badge warn">Inbox — Bereich wählen zum Einsortieren</span>
 			{:else if data.note.bereich}
 				<span class="chip">{BEREICH_LABELS[data.note.bereich]}</span>
 			{/if}
@@ -45,7 +45,7 @@
 			<label class="field">
 				<span>Bereich</span>
 				<select name="bereich">
-					<option value="">📥 (Inbox)</option>
+					<option value="">(Inbox)</option>
 					{#each BEREICHE as bereich (bereich)}
 						<option value={bereich} selected={data.note.bereich === bereich}
 							>{BEREICH_LABELS[bereich]}</option

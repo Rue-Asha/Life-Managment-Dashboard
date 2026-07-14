@@ -44,7 +44,7 @@
 	<title>Finanzen · Zentrale</title>
 </svelte:head>
 
-<p class="eyebrow">💰 Finanzen</p>
+<p class="eyebrow">Finanzen</p>
 <h1>Finanz-Dashboard</h1>
 <FinanceNav />
 
@@ -187,7 +187,7 @@
 				{/if}
 			</div>
 			{#if data.upcoming.length === 0}
-				<p class="muted">Nichts fällig. 🎉</p>
+				<p class="muted">Nichts fällig. </p>
 			{:else}
 				<div class="table-wrap">
 					<table>

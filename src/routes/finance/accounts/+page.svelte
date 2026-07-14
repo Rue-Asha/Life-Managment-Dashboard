@@ -21,7 +21,7 @@
 	<title>Konten · Zentrale</title>
 </svelte:head>
 
-<p class="eyebrow">💰 Finanzen</p>
+<p class="eyebrow">Finanzen</p>
 <h1>Konten</h1>
 <FinanceNav />
 
@@ -153,10 +153,9 @@
 						<option value="liability">Verbindlichkeit</option>
 					</select>
 				</label>
-				<label class="field">
-					<span>&nbsp;</span>
-					<span><input type="checkbox" name="on_budget" checked /> spendable (on budget)</span>
-				</label>
+				<label class="check">
+						<input type="checkbox" name="on_budget" checked /> spendable (on budget)
+					</label>
 				<div class="field">
 					<span>&nbsp;</span>
 					<button class="btn" type="submit">Anlegen</button>

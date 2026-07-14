@@ -11,7 +11,7 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow"><a href="/finance/accounts">💰 Finanzen · Konten</a></p>
+		<p class="eyebrow"><a href="/finance/accounts">Finanzen · Konten</a></p>
 		<h1>{data.account.name}</h1>
 	</div>
 	<a class="btn ghost small" href="/finance/accounts">← Alle Konten</a>

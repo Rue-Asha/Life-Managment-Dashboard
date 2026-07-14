@@ -27,7 +27,7 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow">🔒 Notes</p>
+		<p class="eyebrow">Notes</p>
 		<h1>Notes</h1>
 		<p class="lede" style="margin-bottom:0;">
 			Capture zuerst, einsortieren sonntags — der Bereich wird auf der Notiz-Seite gesetzt.
@@ -50,7 +50,7 @@
 </div>
 
 <h2 class="sect">
-	📥 Inbox · {data.inbox.length}
+	Inbox · {data.inbox.length}
 	{#if data.inbox.length > 0}<span class="soft">sonntags leeren</span>{/if}
 </h2>
 <div class="card" class:dashed={data.inbox.length === 0}>

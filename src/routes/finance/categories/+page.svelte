@@ -10,7 +10,7 @@
 	<title>Kategorien · Zentrale</title>
 </svelte:head>
 
-<p class="eyebrow">💰 Finanzen</p>
+<p class="eyebrow">Finanzen</p>
 <h1>Kategorien</h1>
 <FinanceNav />
 

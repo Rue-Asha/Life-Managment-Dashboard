@@ -14,7 +14,7 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow">💰 Finanzen</p>
+		<p class="eyebrow">Finanzen</p>
 		<h1>Budget · {formatMonth(data.month)}</h1>
 	</div>
 	<div class="actions">

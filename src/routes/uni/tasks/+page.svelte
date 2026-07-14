@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import PrioritySelect from '$lib/PrioritySelect.svelte';
 	import { formatDate, formatDeadline, daysUntil } from '$lib/format';
 	import {
 		PRIORITY_LABELS,
@@ -31,7 +32,7 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow">🎓 Uni</p>
+		<p class="eyebrow">Uni</p>
 		<h1>Task-Datenbank</h1>
 		<p class="lede" style="margin-bottom:0;">
 			Alle Uni-Tasks über alle Semester — inklusive erledigter. Wochenplanung passiert im
@@ -42,7 +43,7 @@
 
 {#if form?.message}<p class="form-error">{form.message}</p>{/if}
 
-<details class="editor">
+<details class="editor" style="margin-bottom:18px;">
 	<summary>＋ Neue Uni-Task</summary>
 	<form method="POST" action="?/createTask" use:enhance>
 		<div class="form-row">
@@ -68,15 +69,7 @@
 					{/each}
 				</select>
 			</label>
-			<label class="field">
-				<span>Priorität</span>
-				<select name="priority">
-					<option value="">—</option>
-					<option value="high">▲ Hoch</option>
-					<option value="medium">■ Mittel</option>
-					<option value="low">▽ Niedrig</option>
-				</select>
-			</label>
+			<PrioritySelect />
 			<label class="field">
 				<span>Deadline</span>
 				<input type="date" name="deadline" />
@@ -202,8 +195,9 @@
 	.status-select {
 		font-size: 12px;
 		padding: 3px 6px;
+		min-height: 26px;
 		border: 1px solid var(--line);
-		border-radius: 7px;
+		border-radius: var(--r-sm);
 		background: var(--surface);
 		color: inherit;
 	}

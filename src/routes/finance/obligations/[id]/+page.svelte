@@ -18,7 +18,7 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow"><a href="/finance/obligations">💰 Finanzen · Fixkosten</a></p>
+		<p class="eyebrow"><a href="/finance/obligations">Finanzen · Fixkosten</a></p>
 		<h1>{data.obligation.name}</h1>
 	</div>
 	<a class="btn ghost small" href="/finance/obligations">← Alle Posten</a>

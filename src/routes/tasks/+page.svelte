@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import PrioritySelect from '$lib/PrioritySelect.svelte';
 	import { formatDeadline, daysUntil } from '$lib/format';
 	import { AREAS, AREA_LABELS, PRIORITY_LABELS, type Area } from '$lib/labels';
 	import type { Task } from '$lib/server/tasks';
@@ -54,10 +55,10 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow">⚡ Tasks</p>
+		<p class="eyebrow">Tasks</p>
 		<h1>Alltag &amp; Orga</h1>
 		<p class="lede" style="margin-bottom:0;">
-			Eigene Datenbank. <strong>🎓 Uni</strong> heißt hier: organisatorische To-dos — Lernaufgaben
+			Eigene Datenbank. <strong>Uni</strong> heißt hier: organisatorische To-dos — Lernaufgaben
 			leben im Uni-Modul (Brick 3).
 		</p>
 	</div>
@@ -86,15 +87,7 @@
 					{/each}
 				</select>
 			</label>
-			<label class="field">
-				<span>Priorität</span>
-				<select name="priority">
-					<option value="">—</option>
-					<option value="high">▲ Hoch</option>
-					<option value="medium">■ Mittel</option>
-					<option value="low">▽ Niedrig</option>
-				</select>
-			</label>
+			<PrioritySelect />
 			<label class="field">
 				<span>Deadline</span>
 				<input type="date" name="deadline" />

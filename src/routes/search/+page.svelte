@@ -2,17 +2,17 @@
 	let { data } = $props();
 
 	const KIND_LABELS: Record<string, string> = {
-		task: '⚡ Task',
-		uni_task: '🎓 Uni-Task',
-		class: '🎓 Class',
-		note: '🔒 Notiz',
-		project: '💻 Projekt'
+		task: 'Task',
+		uni_task: 'Uni-Task',
+		class: 'Class',
+		note: 'Notiz',
+		project: 'Projekt'
 	};
 </script>
 
 <svelte:head><title>Suche · Zentrale</title></svelte:head>
 
-<p class="eyebrow">🔍 Suche</p>
+<p class="eyebrow">Suche</p>
 <h1>Suche</h1>
 
 <div class="card" style="margin-bottom:18px;">
@@ -23,7 +23,7 @@
 				<!-- svelte-ignore a11y_autofocus — dedizierte Suchseite -->
 				<input type="search" name="q" value={data.q} placeholder="z. B. Maillard, Übungsblatt, EPITA …" autofocus />
 			</label>
-			<button class="btn">🔍 Suchen</button>
+			<button class="btn">Suchen</button>
 		</div>
 	</form>
 </div>

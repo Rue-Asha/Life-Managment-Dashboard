@@ -163,8 +163,9 @@
 <style>
 	.editor-shell {
 		border: 1px solid var(--line);
-		border-radius: 12px;
+		border-radius: var(--r-lg);
 		background: var(--surface);
+		box-shadow: var(--shadow-sm);
 		overflow: hidden;
 	}
 
@@ -186,8 +187,12 @@
 		font-size: 12.5px;
 		min-width: 28px;
 		padding: 4px 6px;
-		border-radius: 7px;
+		border-radius: var(--r-sm);
 		cursor: pointer;
+		transition:
+			color 0.12s ease,
+			border-color 0.12s ease,
+			background 0.12s ease;
 	}
 
 	.tbtn:hover {

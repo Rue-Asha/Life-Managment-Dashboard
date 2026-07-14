@@ -5,10 +5,10 @@ export const AREAS = ['uni', 'job', 'it', 'personal'] as const;
 export type Area = (typeof AREAS)[number];
 
 export const AREA_LABELS: Record<Area, string> = {
-	uni: '🎓 Uni (Orga)',
-	job: '💼 Job',
-	it: '💻 IT',
-	personal: '🏠 Personal'
+	uni: 'Uni (Orga)',
+	job: 'Job',
+	it: 'IT',
+	personal: 'Personal'
 };
 
 export const PRIORITIES = ['high', 'medium', 'low'] as const;
@@ -55,12 +55,12 @@ export const BEREICHE = [
 export type Bereich = (typeof BEREICHE)[number];
 
 export const BEREICH_LABELS: Record<Bereich, string> = {
-	persoenlich: '🧍 Persönlich',
-	ideen: '💡 Ideen',
-	gesundheit: '🩺 Gesundheit',
-	reise: '✈️ Reise',
-	orte_food: '📍 Orte & Food',
-	musik_medien: '🎵 Musik & Medien'
+	persoenlich: 'Persönlich',
+	ideen: 'Ideen',
+	gesundheit: 'Gesundheit',
+	reise: 'Reise',
+	orte_food: 'Orte & Food',
+	musik_medien: 'Musik & Medien'
 };
 
 // Curriculum (brick 7)
@@ -71,11 +71,11 @@ export const PROJECT_TYPES = ['project', 'course', 'tutorial', 'research', 'othe
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 
 export const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
-	project: '🛠 Projekt',
-	course: '📚 Kurs',
-	tutorial: '🧪 Tutorial',
-	research: '🔬 Research',
-	other: '📦 Sonstiges'
+	project: 'Projekt',
+	course: 'Kurs',
+	tutorial: 'Tutorial',
+	research: 'Research',
+	other: 'Sonstiges'
 };
 
 export const PROJECT_STATUSES = ['backlog', 'in_progress', 'done', 'paused', 'archived'] as const;

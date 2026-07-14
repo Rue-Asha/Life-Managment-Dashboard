@@ -19,7 +19,7 @@
 <div class="rows review-steps">
 	<div class="card step">
 		<h3>
-			<span class="mono stepno">1</span> 📥 Inbox leeren
+			<span class="mono stepno">1</span> Inbox leeren
 			{#if data.inbox === 0}<span class="badge good">✓ leer</span>
 			{:else}<span class="badge warn">● {data.inbox} offen</span>{/if}
 		</h3>
@@ -27,12 +27,12 @@
 			Jede Capture-Notiz entweder in einen Bereich einsortieren, in eine Task umwandeln oder
 			löschen.
 		</p>
-		<a class="more" href="/notes">🔒 Zur Inbox →</a>
+		<a class="more" href="/notes">Zur Inbox →</a>
 	</div>
 
 	<div class="card step">
 		<h3>
-			<span class="mono stepno">2</span> ⚡ Woche befüllen
+			<span class="mono stepno">2</span> Woche befüllen
 			<span class="badge">{data.taskBacklog} Alltag-Backlog</span>
 			<span class="badge">{data.uniBacklog} Uni-Backlog</span>
 		</h3>
@@ -41,13 +41,13 @@
 			Letzte Woche: {data.stats.done}/{data.stats.total} Alltag · {data.uniStats.done}/{data.uniStats.total}
 			Uni erledigt.
 		</p>
-		<a class="more" href="/tasks">⚡ Tasks →</a>
-		<a class="more" href="/uni" style="margin-left:14px;">🎓 Uni →</a>
+		<a class="more" href="/tasks">Tasks →</a>
+		<a class="more" href="/uni" style="margin-left:14px;">Uni →</a>
 	</div>
 
 	<div class="card step">
 		<h3>
-			<span class="mono stepno">3</span> 🧭 Quota-Bilanz
+			<span class="mono stepno">3</span> Quota-Bilanz
 			{#if data.phaseName === null}<span class="badge">keine aktive Phase</span>
 			{:else if quotaOpen.length === 0}<span class="badge good">✓ Vertrag erfüllt</span>
 			{:else}<span class="badge warn">● {quotaOpen.length} unter Soll</span>{/if}
@@ -69,12 +69,12 @@
 		{:else}
 			<p class="dim">Keine Quoten definiert.</p>
 		{/if}
-		<a class="more" href="/curriculum">🧭 Zum Schedule →</a>
+		<a class="more" href="/curriculum">Zum Schedule →</a>
 	</div>
 
 	<div class="card step" class:dashed={!data.financeSunday}>
 		<h3>
-			<span class="mono stepno">4</span> 💰 Finanz-Ritual
+			<span class="mono stepno">4</span> Finanz-Ritual
 			{#if data.financeSunday}
 				<span class="badge good">● diesen Sonntag</span>
 			{:else}
@@ -88,8 +88,8 @@
 			Kontostände eintragen → Budget-Monat abschließen (Einkommen Ist, Variables) → Cross-Check
 			ansehen.
 		</p>
-		<a class="more" href="/finance/accounts">🏦 Konten →</a>
-		<a class="more" href="/finance/budget" style="margin-left:14px;">📊 Budget →</a>
+		<a class="more" href="/finance/accounts">Konten →</a>
+		<a class="more" href="/finance/budget" style="margin-left:14px;">Budget →</a>
 	</div>
 </div>
 

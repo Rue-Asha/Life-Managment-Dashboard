@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import PrioritySelect from '$lib/PrioritySelect.svelte';
 	import { formatDeadline, daysUntil } from '$lib/format';
 	import {
 		CLASS_STATUSES,
@@ -21,7 +22,7 @@
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow"><a href="/uni?semester={data.cls.semester_id}">🎓 Uni</a> · {data.cls.semester_name}</p>
+		<p class="eyebrow"><a href="/uni?semester={data.cls.semester_id}">Uni</a> · {data.cls.semester_name}</p>
 		<h1>{data.cls.name}</h1>
 		<p class="lede" style="margin-bottom:0;">
 			<span class="badge {CLASS_STATUS_LABELS[data.cls.status].tone}"
@@ -91,7 +92,7 @@
 </div>
 
 <h2 class="sect">Tasks · {data.tasks.length}</h2>
-<details class="editor">
+<details class="editor" style="margin-bottom:14px;">
 	<summary>＋ Neue Task für „{data.cls.name}“</summary>
 	<form method="POST" action="?/createTask" use:enhance>
 		<div class="form-row">
@@ -108,15 +109,7 @@
 					{/each}
 				</select>
 			</label>
-			<label class="field">
-				<span>Priorität</span>
-				<select name="priority">
-					<option value="">—</option>
-					<option value="high">▲ Hoch</option>
-					<option value="medium">■ Mittel</option>
-					<option value="low">▽ Niedrig</option>
-				</select>
-			</label>
+			<PrioritySelect />
 			<label class="field">
 				<span>Deadline</span>
 				<input type="date" name="deadline" />
