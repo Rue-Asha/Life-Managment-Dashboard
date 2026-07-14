@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from './$types';
 import {
 	listAllClasses,
 	listUniTasks,
+	createUniTask,
 	toggleUniDone,
 	setUniWeek,
 	setUniStatus,
@@ -9,8 +10,18 @@ import {
 	deleteUniTask,
 	type UniTaskFilter
 } from '$lib/server/uni';
-import { action, int, oneOf } from '$lib/server/forms';
 import {
+	action,
+	checkbox,
+	int,
+	intOrNull,
+	oneOf,
+	oneOfOrNull,
+	str,
+	strOrNull
+} from '$lib/server/forms';
+import {
+	PRIORITIES,
 	TASK_STATUSES,
 	UNI_TASK_TYPES,
 	type TaskStatus,
@@ -37,6 +48,16 @@ export const load: PageServerLoad = ({ url }) => {
 };
 
 export const actions: Actions = {
+	createTask: action((_event, data) => {
+		createUniTask({
+			title: str(data, 'title', 'Titel'),
+			classId: intOrNull(data, 'class_id'),
+			taskType: oneOfOrNull(data, 'task_type', UNI_TASK_TYPES),
+			priority: oneOfOrNull(data, 'priority', PRIORITIES),
+			deadline: strOrNull(data, 'deadline'),
+			thisWeek: checkbox(data, 'this_week')
+		});
+	}),
 	toggle: action((_event, data) => {
 		toggleUniDone(int(data, 'id'));
 	}),

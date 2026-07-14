@@ -42,6 +42,51 @@
 
 {#if form?.message}<p class="form-error">{form.message}</p>{/if}
 
+<details class="editor">
+	<summary>＋ Neue Uni-Task</summary>
+	<form method="POST" action="?/createTask" use:enhance>
+		<div class="form-row">
+			<label class="field" style="flex:1; min-width:220px;">
+				<span>Titel</span>
+				<input type="text" name="title" required placeholder="Übungsblatt 5 bearbeiten" />
+			</label>
+			<label class="field">
+				<span>Modul</span>
+				<select name="class_id">
+					<option value="">—</option>
+					{#each data.allClasses as cls (cls.id)}
+						<option value={cls.id}>{cls.name} ({cls.semester_name})</option>
+					{/each}
+				</select>
+			</label>
+			<label class="field">
+				<span>Type</span>
+				<select name="task_type">
+					<option value="">—</option>
+					{#each Object.entries(UNI_TASK_TYPE_LABELS) as [value, label] (value)}
+						<option {value}>{label}</option>
+					{/each}
+				</select>
+			</label>
+			<label class="field">
+				<span>Priorität</span>
+				<select name="priority">
+					<option value="">—</option>
+					<option value="high">▲ Hoch</option>
+					<option value="medium">■ Mittel</option>
+					<option value="low">▽ Niedrig</option>
+				</select>
+			</label>
+			<label class="field">
+				<span>Deadline</span>
+				<input type="date" name="deadline" />
+			</label>
+			<label class="check"><input type="checkbox" name="this_week" /> This Week</label>
+			<button class="btn">＋ Anlegen</button>
+		</div>
+	</form>
+</details>
+
 <div class="filters">
 	<a class="fchip" class:on={data.filter.status === null} href={filterQuery({ status: null })}
 		>Alle</a

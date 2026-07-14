@@ -163,8 +163,8 @@
 		</div>
 	{/if}
 
-	<h2 class="sect">＋ Class anlegen</h2>
-	<div class="card">
+	<details class="editor" open={data.classes.length === 0}>
+		<summary>＋ Class anlegen</summary>
 		<form method="POST" action="?/createClass" use:enhance>
 			<input type="hidden" name="semester_id" value={selectedSemester.id} />
 			<div class="form-row">
@@ -199,7 +199,7 @@
 				<button class="btn">＋ Anlegen</button>
 			</div>
 		</form>
-	</div>
+	</details>
 {/if}
 
 <h2 class="sect">

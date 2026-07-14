@@ -5,12 +5,22 @@ import {
 	updateClass,
 	deleteClass,
 	listClassTasks,
+	createUniTask,
 	toggleUniDone,
 	setUniWeek,
 	deleteUniTask
 } from '$lib/server/uni';
-import { action, int, numOrNull, oneOf, str, strOrNull } from '$lib/server/forms';
-import { CLASS_STATUSES } from '$lib/labels';
+import {
+	action,
+	checkbox,
+	int,
+	numOrNull,
+	oneOf,
+	oneOfOrNull,
+	str,
+	strOrNull
+} from '$lib/server/forms';
+import { CLASS_STATUSES, PRIORITIES, UNI_TASK_TYPES } from '$lib/labels';
 
 export const load: PageServerLoad = ({ params }) => {
 	const id = Number(params.id);
@@ -37,6 +47,16 @@ export const actions: Actions = {
 		deleteClass(Number(event.params.id));
 		redirect(303, cls ? `/uni?semester=${cls.semester_id}` : '/uni');
 	},
+	createTask: action((event, data) => {
+		createUniTask({
+			title: str(data, 'title', 'Titel'),
+			classId: Number(event.params.id),
+			taskType: oneOfOrNull(data, 'task_type', UNI_TASK_TYPES),
+			priority: oneOfOrNull(data, 'priority', PRIORITIES),
+			deadline: strOrNull(data, 'deadline'),
+			thisWeek: checkbox(data, 'this_week')
+		});
+	}),
 	toggle: action((_event, data) => {
 		toggleUniDone(int(data, 'id'));
 	}),
