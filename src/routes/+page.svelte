@@ -20,14 +20,19 @@
 		const day = String(d.getDate()).padStart(2, '0');
 		return `${y}-${m}-${day}`;
 	}
-	const calWeekStart = $derived(new Date(`${data.calWeekStart}T00:00:00`));
+	const calStart = $derived(new Date(`${data.calStart}T00:00:00`));
 	const calDays = $derived(
 		Array.from({ length: 7 }, (_, i) => {
-			const d = new Date(calWeekStart);
+			const d = new Date(calStart);
 			d.setDate(d.getDate() + i);
 			return d;
 		})
 	);
+	const calLabel = $derived.by(() => {
+		const end = calDays[6];
+		const fmt = (d: Date) => d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+		return `${fmt(calStart)} – ${fmt(end)}`;
+	});
 	const calByDay = $derived.by(() => {
 		const map = new Map<string, AgendaEvent[]>();
 		for (const ev of data.calEvents) {
@@ -187,17 +192,26 @@
 		<a class="more" href="/curriculum">Zum Schedule →</a>
 	</div>
 
-	<div class="card span-3">
-		<h3 class="cal-h3">
-			<span>Kalender · Diese Woche</span>
-			<a
-				class="more"
-				style="margin:0;"
-				href="https://calendar.proton.me"
-				target="_blank"
-				rel="noreferrer">↗ In Proton öffnen</a
-			>
-		</h3>
+	<div class="card span-3" id="cal">
+		<div class="cal-h3">
+			<h3 style="margin:0;">Kalender · {calLabel}</h3>
+			<div class="cal-nav">
+				<a class="fchip" href="/?cal={data.calPrev}#cal" aria-label="7 Tage zurück">‹</a>
+				<a
+					class="fchip"
+					class:on={data.calStart === data.calToday}
+					href="/?cal={data.calToday}#cal">Heute</a
+				>
+				<a class="fchip" href="/?cal={data.calNext}#cal" aria-label="7 Tage vor">›</a>
+				<a
+					class="more"
+					style="margin:0 0 0 4px;"
+					href="https://calendar.proton.me"
+					target="_blank"
+					rel="noreferrer">↗ In Proton öffnen</a
+				>
+			</div>
+		</div>
 		{#if !data.icsConfigured}
 			<p class="dim" style="margin:0; font-size:13.5px;">
 				<span class="mono">PROTON_ICS_URL</span> in der <span class="mono">.env</span> setzen (Proton
@@ -205,9 +219,10 @@
 			</p>
 		{:else}
 			<div class="calweek">
-				{#each calDays as d, i (calIso(d))}
+				{#each calDays as d (calIso(d))}
 					<div class="calday" class:today={calIso(d) === todayIso}>
-						<p class="cdhead mono">{WEEKDAYS[i]} {d.getDate()}.{d.getMonth() + 1}.</p>
+						<p class="cdhead mono">{WEEKDAYS[(d.getDay() + 6) % 7]} {d.getDate()}.{d.getMonth() +
+								1}.</p>
 						{#each calEventsFor(d) as ev (ev.start + ev.summary)}
 							<div class="cev" class:allday={ev.allDay}>
 								{#if !ev.allDay}<span class="ct mono">{evTime(ev)}</span>{/if}
@@ -290,8 +305,21 @@
 	.cal-h3 {
 		display: flex;
 		justify-content: space-between;
-		align-items: baseline;
-		gap: 10px;
+		align-items: center;
+		gap: 10px 14px;
+		flex-wrap: wrap;
+		margin-bottom: 12px;
+	}
+	.cal-nav {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		flex-wrap: wrap;
+	}
+	.cal-nav .fchip.on {
+		background: var(--ink);
+		color: var(--ground);
+		border-color: var(--ink);
 	}
 	.calweek {
 		display: grid;

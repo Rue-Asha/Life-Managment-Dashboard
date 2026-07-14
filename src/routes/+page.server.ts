@@ -29,7 +29,7 @@ function byUrgency(a: WeekItem, b: WeekItem): number {
 	return a.deadline < b.deadline ? -1 : 1;
 }
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ url }) => {
 	const orgaOpen: WeekItem[] = listWeekOpen()
 		.map(
 			(t): WeekItem => ({
@@ -98,22 +98,42 @@ export const load: PageServerLoad = async () => {
 		})),
 		today: todayView(),
 		icsConfigured: icsConfigured(),
-		...(await calendarWeek())
+		...(await calendarWeek(url))
 	};
 };
 
-/** Current week (Mon–Sun) as a quick calendar overview on Home. */
-async function calendarWeek(): Promise<{ calWeekStart: string; calEvents: AgendaEvent[] }> {
-	const from = new Date();
+function isoDate(d: Date): string {
+	const y = d.getFullYear();
+	const m = String(d.getMonth() + 1).padStart(2, '0');
+	const day = String(d.getDate()).padStart(2, '0');
+	return `${y}-${m}-${day}`;
+}
+
+/** Rolling 7-day calendar overview on Home. Defaults to today; `?cal=YYYY-MM-DD`
+ *  shifts the window (prev/next step 7 days) so the user can page weeks. */
+async function calendarWeek(url: URL): Promise<{
+	calStart: string;
+	calToday: string;
+	calPrev: string;
+	calNext: string;
+	calEvents: AgendaEvent[];
+}> {
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+	const raw = url.searchParams.get('cal');
+	const from = raw && /^\d{4}-\d{2}-\d{2}$/.test(raw) ? new Date(`${raw}T00:00:00`) : today;
 	from.setHours(0, 0, 0, 0);
-	from.setDate(from.getDate() - ((from.getDay() + 6) % 7)); // back to Monday
 	const to = new Date(from);
 	to.setDate(to.getDate() + 7);
-	const y = from.getFullYear();
-	const m = String(from.getMonth() + 1).padStart(2, '0');
-	const d = String(from.getDate()).padStart(2, '0');
+	const prev = new Date(from);
+	prev.setDate(prev.getDate() - 7);
+	const next = new Date(from);
+	next.setDate(next.getDate() + 7);
 	return {
-		calWeekStart: `${y}-${m}-${d}`,
+		calStart: isoDate(from),
+		calToday: isoDate(today),
+		calPrev: isoDate(prev),
+		calNext: isoDate(next),
 		calEvents: icsConfigured() ? await getEventsInRange(from, to) : []
 	};
 }
