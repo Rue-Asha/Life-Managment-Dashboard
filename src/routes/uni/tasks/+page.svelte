@@ -8,8 +8,11 @@
 		TASK_STATUS_LABELS,
 		UNI_TASK_TYPE_LABELS
 	} from '$lib/labels';
+	import type { UniTask } from '$lib/server/uni';
 
 	let { data, form } = $props();
+
+	let editingId = $state<number | null>(null);
 
 	// GET-Filter als Query-String bauen (leere Werte fallen weg).
 	function filterQuery(patch: Record<string, string | null>): string {
@@ -113,6 +116,55 @@
 	{/each}
 </div>
 
+{#snippet editRow(task: UniTask)}
+	<form
+		class="row editrow"
+		method="POST"
+		action="?/update"
+		use:enhance={() => {
+			return async ({ update, result }) => {
+				await update({ reset: false });
+				if (result.type === 'success') editingId = null;
+			};
+		}}
+	>
+		<input type="hidden" name="id" value={task.id} />
+		<label class="field" style="flex:1; min-width:200px;">
+			<span>Titel</span>
+			<input type="text" name="title" required value={task.title} />
+		</label>
+		<label class="field">
+			<span>Modul</span>
+			<select name="class_id">
+				<option value="">—</option>
+				{#each data.allClasses as cls (cls.id)}
+					<option value={cls.id} selected={task.class_id === cls.id}>{cls.name}</option>
+				{/each}
+			</select>
+		</label>
+		<label class="field">
+			<span>Type</span>
+			<select name="task_type">
+				<option value="">—</option>
+				{#each Object.entries(UNI_TASK_TYPE_LABELS) as [value, label] (value)}
+					<option {value} selected={task.task_type === value}>{label}</option>
+				{/each}
+			</select>
+		</label>
+		<PrioritySelect value={task.priority} />
+		<label class="field">
+			<span>Deadline</span>
+			<input type="date" name="deadline" value={task.deadline ?? ''} />
+		</label>
+		<label class="field">
+			<span>Zuletzt wiederholt</span>
+			<input type="date" name="last_revision" value={task.last_revision ?? ''} />
+		</label>
+		<button class="btn">✓ Speichern</button>
+		<button class="fchip" type="button" onclick={() => (editingId = null)}>Abbrechen</button>
+	</form>
+{/snippet}
+
 <h2 class="sect">Tasks · {data.tasks.length}</h2>
 <div class="card">
 	{#if data.tasks.length === 0}
@@ -120,6 +172,9 @@
 	{:else}
 		<div class="rows">
 			{#each data.tasks as task (task.id)}
+				{#if editingId === task.id}
+					{@render editRow(task)}
+				{:else}
 				<div class="row">
 					<form class="inline" method="POST" action="?/toggle" use:enhance>
 						<input type="hidden" name="id" value={task.id} />
@@ -178,11 +233,18 @@
 						<input type="hidden" name="id" value={task.id} />
 						<button class="iconbtn" title="Heute revidiert (Last Revision setzen)">↻</button>
 					</form>
+						<button
+							class="iconbtn edit"
+							title="Bearbeiten"
+							aria-label="Task bearbeiten"
+							onclick={() => (editingId = task.id)}>✎</button
+						>
 					<form class="inline" method="POST" action="?/delete" use:enhance>
 						<input type="hidden" name="id" value={task.id} />
 						<button class="iconbtn" title="Löschen" aria-label="„{task.title}“ löschen">✕</button>
 					</form>
 				</div>
+				{/if}
 			{/each}
 		</div>
 	{/if}
@@ -200,5 +262,9 @@
 		border-radius: var(--r-sm);
 		background: var(--surface);
 		color: inherit;
+	}
+	.editrow {
+		align-items: flex-end;
+		gap: 10px;
 	}
 </style>

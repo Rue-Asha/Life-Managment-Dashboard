@@ -273,6 +273,35 @@ export function createUniTask(input: {
 		);
 }
 
+/** Edit an existing uni task's fields (incl. the optional Last-Revision date). */
+export function updateUniTask(
+	id: number,
+	input: {
+		title: string;
+		classId: number | null;
+		taskType: UniTaskType | null;
+		priority: Priority | null;
+		deadline: string | null;
+		lastRevision: string | null;
+	}
+): void {
+	getDb()
+		.prepare(
+			`UPDATE uni_tasks SET title = ?, class_id = ?, task_type = ?, priority = ?,
+			   deadline = ?, last_revision = ?
+			 WHERE id = ?`
+		)
+		.run(
+			input.title,
+			input.classId,
+			input.taskType,
+			input.priority,
+			input.deadline,
+			input.lastRevision,
+			id
+		);
+}
+
 export function toggleUniDone(id: number): void {
 	getDb()
 		.prepare(

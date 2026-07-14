@@ -1,15 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import PrioritySelect from '$lib/PrioritySelect.svelte';
-	import { formatDeadline, daysUntil } from '$lib/format';
+	import { formatDate, formatDeadline, daysUntil } from '$lib/format';
 	import {
 		CLASS_STATUSES,
 		CLASS_STATUS_LABELS,
 		PRIORITY_LABELS,
 		UNI_TASK_TYPE_LABELS
 	} from '$lib/labels';
+	import type { UniTask } from '$lib/server/uni';
 
 	let { data, form } = $props();
+
+	let editingId = $state<number | null>(null);
 
 	function confirmDelete(event: SubmitEvent) {
 		if (!confirm(`Class „${data.cls.name}“ löschen? Ihre Tasks bleiben (ohne Modul).`)) {
@@ -17,6 +20,46 @@
 		}
 	}
 </script>
+
+{#snippet taskEditRow(task: UniTask)}
+	<form
+		class="row editrow"
+		method="POST"
+		action="?/editTask"
+		use:enhance={() => {
+			return async ({ update, result }) => {
+				await update({ reset: false });
+				if (result.type === 'success') editingId = null;
+			};
+		}}
+	>
+		<input type="hidden" name="id" value={task.id} />
+		<label class="field" style="flex:1; min-width:200px;">
+			<span>Titel</span>
+			<input type="text" name="title" required value={task.title} />
+		</label>
+		<label class="field">
+			<span>Type</span>
+			<select name="task_type">
+				<option value="">—</option>
+				{#each Object.entries(UNI_TASK_TYPE_LABELS) as [value, label] (value)}
+					<option {value} selected={task.task_type === value}>{label}</option>
+				{/each}
+			</select>
+		</label>
+		<PrioritySelect value={task.priority} />
+		<label class="field">
+			<span>Deadline</span>
+			<input type="date" name="deadline" value={task.deadline ?? ''} />
+		</label>
+		<label class="field">
+			<span>Zuletzt wiederholt</span>
+			<input type="date" name="last_revision" value={task.last_revision ?? ''} />
+		</label>
+		<button class="btn">✓ Speichern</button>
+		<button class="fchip" type="button" onclick={() => (editingId = null)}>Abbrechen</button>
+	</form>
+{/snippet}
 
 <svelte:head><title>{data.cls.name} · Zentrale</title></svelte:head>
 
@@ -150,6 +193,9 @@
 		{:else}
 			<div class="rows">
 				{#each data.tasks as task (task.id)}
+					{#if editingId === task.id}
+						{@render taskEditRow(task)}
+					{:else}
 					<div class="row">
 						<form class="inline" method="POST" action="?/toggle" use:enhance>
 							<input type="hidden" name="id" value={task.id} />
@@ -174,6 +220,10 @@
 								>{formatDeadline(task.deadline)}</span
 							>
 						{/if}
+						{#if task.last_revision}
+							<span class="chip mono" title="Zuletzt wiederholt">↻ {formatDate(task.last_revision)}</span
+							>
+						{/if}
 						{#if task.status !== 'done' && task.status !== 'wont_do'}
 							<form class="inline" method="POST" action="?/week" use:enhance>
 								<input type="hidden" name="id" value={task.id} />
@@ -181,11 +231,18 @@
 								<button class="fchip">{task.this_week ? '→ Backlog' : '→ This Week'}</button>
 							</form>
 						{/if}
+						<button
+							class="iconbtn edit"
+							title="Bearbeiten"
+							aria-label="„{task.title}“ bearbeiten"
+							onclick={() => (editingId = task.id)}>✎</button
+						>
 						<form class="inline" method="POST" action="?/deleteTask" use:enhance>
 							<input type="hidden" name="id" value={task.id} />
 							<button class="iconbtn" title="Löschen" aria-label="„{task.title}“ löschen">✕</button>
 						</form>
 					</div>
+					{/if}
 				{/each}
 			</div>
 		{/if}
@@ -238,5 +295,9 @@
 	}
 	details.sec > summary:hover::before {
 		color: var(--accent);
+	}
+	.editrow {
+		align-items: flex-end;
+		gap: 10px;
 	}
 </style>

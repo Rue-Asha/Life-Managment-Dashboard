@@ -3,6 +3,7 @@ import {
 	listAllClasses,
 	listUniTasks,
 	createUniTask,
+	updateUniTask,
 	toggleUniDone,
 	setUniWeek,
 	setUniStatus,
@@ -56,6 +57,16 @@ export const actions: Actions = {
 			priority: oneOfOrNull(data, 'priority', PRIORITIES),
 			deadline: strOrNull(data, 'deadline'),
 			thisWeek: checkbox(data, 'this_week')
+		});
+	}),
+	update: action((_event, data) => {
+		updateUniTask(int(data, 'id'), {
+			title: str(data, 'title', 'Titel'),
+			classId: intOrNull(data, 'class_id'),
+			taskType: oneOfOrNull(data, 'task_type', UNI_TASK_TYPES),
+			priority: oneOfOrNull(data, 'priority', PRIORITIES),
+			deadline: strOrNull(data, 'deadline'),
+			lastRevision: strOrNull(data, 'last_revision')
 		});
 	}),
 	toggle: action((_event, data) => {
