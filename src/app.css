@@ -29,6 +29,8 @@
 	--r-sm: 8px;
 	--r-md: 10px;
 	--r-lg: 14px;
+	--ease: cubic-bezier(0.33, 0.08, 0.24, 1);
+	--dur: 0.18s;
 	--font-ui:
 		'Inter', 'SF Pro Text', 'Segoe UI Variable', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue',
 		Arial, sans-serif;
@@ -69,8 +71,8 @@ body {
 	background: var(--ground);
 	color: var(--ink);
 	font-family: var(--font-ui);
-	font-size: 14.5px;
-	line-height: 1.5;
+	font-size: 15px;
+	line-height: 1.55;
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
 }
@@ -145,26 +147,28 @@ button {
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	font-size: 13.5px;
+	font-size: 14px;
 	font-weight: 500;
 	color: var(--ink2);
 	text-decoration: none;
 	border-radius: var(--r-sm);
-	padding: 7px 10px;
+	padding: 8px 11px;
 	transition:
-		background 0.12s ease,
-		color 0.12s ease;
+		background var(--dur) var(--ease),
+		color var(--dur) var(--ease),
+		transform var(--dur) var(--ease);
 }
 .nav-link svg {
 	width: 17px;
 	height: 17px;
 	flex: 0 0 17px;
 	color: var(--ink3);
-	transition: color 0.12s ease;
+	transition: color var(--dur) var(--ease);
 }
 .nav-link:hover {
 	background: var(--surface2);
 	color: var(--ink);
+	transform: translateX(2px);
 }
 .nav-link:hover svg {
 	color: var(--ink2);
@@ -299,13 +303,14 @@ h1 {
 .lede {
 	color: var(--ink2);
 	margin: 0 0 26px;
-	font-size: 14.5px;
+	font-size: 15px;
 	max-width: 70ch;
+	line-height: 1.6;
 }
 h2.sect {
-	font-size: 11.5px;
+	font-size: 12px;
 	font-weight: 600;
-	letter-spacing: 0.11em;
+	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	color: var(--ink2);
 	margin: 34px 0 12px;
@@ -364,6 +369,26 @@ h2.sect::after {
 	padding: 18px 20px;
 	min-width: 0;
 	box-shadow: var(--shadow-sm);
+	transition:
+		box-shadow var(--dur) var(--ease),
+		border-color var(--dur) var(--ease);
+}
+
+/* Interactive lift — for cards/links that navigate or open something.
+ * Reused by the GitHub banner, project cards, board cards, etc. */
+.lift {
+	transition:
+		transform var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease),
+		border-color var(--dur) var(--ease);
+}
+.lift:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--shadow-md);
+	border-color: var(--line-strong);
+}
+.lift:active {
+	transform: translateY(-1px);
 }
 .card h3 {
 	font-size: 13.5px;
@@ -407,17 +432,17 @@ h2.sect::after {
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
-	font-size: 11.5px;
+	font-size: 12px;
 	font-weight: 500;
 	color: var(--ink2);
 	background: var(--surface2);
 	border-radius: 999px;
-	padding: 2px 9px;
+	padding: 3px 10px;
 	white-space: nowrap;
 }
 .chip.mono {
 	font-family: var(--font-mono);
-	font-size: 11px;
+	font-size: 11.5px;
 }
 .chip.accent {
 	background: var(--accent-soft);
@@ -428,7 +453,7 @@ h2.sect::after {
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
-	font-size: 11.5px;
+	font-size: 12px;
 	font-weight: 600;
 	white-space: nowrap;
 	color: var(--ink2);
@@ -493,9 +518,15 @@ h2.sect::after {
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 4px 10px;
-	padding: 9px 4px;
+	padding: 10px 8px;
+	margin: 0 -8px;
+	border-radius: var(--r-sm);
 	border-bottom: 1px solid var(--line);
 	min-width: 0;
+	transition: background var(--dur) var(--ease);
+}
+.row:hover {
+	background: color-mix(in srgb, var(--surface2) 55%, transparent);
 }
 .rows .row:last-child {
 	border-bottom: 0;
@@ -551,7 +582,7 @@ form.inline {
 }
 .due {
 	font-family: var(--font-mono);
-	font-size: 11.5px;
+	font-size: 12px;
 	color: var(--ink2);
 	white-space: nowrap;
 	font-variant-numeric: tabular-nums;
@@ -570,14 +601,14 @@ form.inline {
 	margin: 0 0 18px;
 }
 .fchip {
-	font-size: 12.5px;
+	font-size: 13px;
 	font-weight: 500;
 	font-family: var(--font-ui);
 	color: var(--ink2);
 	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: 999px;
-	padding: 4px 13px;
+	padding: 5px 14px;
 	cursor: pointer;
 	text-decoration: none;
 	display: inline-flex;
@@ -585,13 +616,14 @@ form.inline {
 	gap: 5px;
 	white-space: nowrap;
 	transition:
-		color 0.12s ease,
-		border-color 0.12s ease,
-		background 0.12s ease;
+		color var(--dur) var(--ease),
+		border-color var(--dur) var(--ease),
+		background var(--dur) var(--ease);
 }
 .fchip:hover {
 	color: var(--ink);
 	border-color: var(--line-strong);
+	background: var(--surface2);
 }
 .fchip.on {
 	background: var(--ink);
@@ -618,21 +650,27 @@ form.inline {
 	background: var(--accent);
 	border: 1px solid var(--accent);
 	border-radius: var(--r-md);
-	padding: 7px 15px;
-	min-height: 34px;
+	padding: 8px 16px;
+	min-height: 36px;
 	cursor: pointer;
 	white-space: nowrap;
 	text-decoration: none;
 	transition:
-		filter 0.12s ease,
-		background 0.12s ease,
-		border-color 0.12s ease;
+		filter var(--dur) var(--ease),
+		background var(--dur) var(--ease),
+		border-color var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease),
+		transform var(--dur) var(--ease);
 }
 .btn:hover {
-	filter: brightness(1.08);
+	filter: brightness(1.06);
+	transform: translateY(-1px);
+	box-shadow: var(--shadow-sm);
 }
 .btn:active {
 	filter: brightness(0.95);
+	transform: translateY(0);
+	box-shadow: none;
 }
 .btn.ghost {
 	background: var(--surface);
@@ -666,6 +704,11 @@ form.inline {
 	color: var(--crit);
 	background: var(--crit-soft);
 }
+/* Non-destructive icon action (edit, etc.) — accent hover, not danger red. */
+.iconbtn.edit:hover {
+	color: var(--accent);
+	background: var(--accent-soft);
+}
 
 /* ---------- forms ---------- */
 .form-row {
@@ -681,7 +724,7 @@ form.inline {
 	min-width: 0;
 }
 .field > span {
-	font-size: 12px;
+	font-size: 12.5px;
 	font-weight: 500;
 	color: var(--ink2);
 }
@@ -695,17 +738,17 @@ input[type='url'],
 select,
 textarea {
 	font-family: var(--font-ui);
-	font-size: 14px;
+	font-size: 14.5px;
 	color: var(--ink);
 	background: var(--surface);
 	border: 1px solid var(--line-strong);
 	border-radius: var(--r-md);
-	padding: 7px 10px;
-	min-height: 34px;
+	padding: 8px 11px;
+	min-height: 36px;
 	color-scheme: light dark;
 	transition:
-		border-color 0.12s ease,
-		box-shadow 0.12s ease;
+		border-color var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease);
 }
 input[type='text']:focus,
 input[type='search']:focus,
@@ -732,10 +775,10 @@ label.check {
 	display: inline-flex;
 	align-items: center;
 	gap: 7px;
-	font-size: 13px;
+	font-size: 13.5px;
 	font-weight: 500;
 	color: var(--ink2);
-	min-height: 34px;
+	min-height: 36px;
 	cursor: pointer;
 }
 .form-error {

@@ -51,7 +51,7 @@
 {/snippet}
 
 {#snippet projectCard(project: Project)}
-	<div class="card pcard">
+	<div class="card pcard lift">
 		<h3><a href="/projects/{project.id}">{project.name}</a></h3>
 		<p style="margin:0 0 8px; display:flex; gap:6px; flex-wrap:wrap;">
 			<span class="badge {PROJECT_STATUS_LABELS[project.status].tone}"
@@ -181,7 +181,7 @@
 					{PROJECT_STATUS_LABELS[status].label} · {byStatus[status].length}
 				</p>
 				{#each byStatus[status] as project (project.id)}
-					<div class="bcard">
+					<div class="bcard lift">
 						<a href="/projects/{project.id}"><strong>{project.name}</strong></a>
 						<p style="margin:4px 0 0; display:flex; gap:5px; flex-wrap:wrap;">
 							<span class="chip">{PROJECT_TYPE_LABELS[project.type]}</span>
@@ -261,15 +261,22 @@
 		color: var(--ink);
 		text-decoration: none;
 		transition:
-			border-color 0.15s,
-			box-shadow 0.15s,
-			transform 0.15s;
+			border-color var(--dur) var(--ease),
+			box-shadow var(--dur) var(--ease),
+			transform var(--dur) var(--ease);
 	}
 
 	.gh-banner:hover {
 		border-color: var(--accent);
 		box-shadow: var(--shadow-md);
-		transform: translateY(-1px);
+		transform: translateY(-2px);
+	}
+
+	.gh-banner .gh-mark,
+	.gh-banner .gh-cta {
+		transition:
+			background var(--dur) var(--ease),
+			color var(--dur) var(--ease);
 	}
 
 	.gh-mark {

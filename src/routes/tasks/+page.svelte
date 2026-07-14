@@ -87,7 +87,7 @@
 			</form>
 		{/if}
 		<button
-			class="iconbtn"
+			class="iconbtn edit"
 			title="Bearbeiten"
 			aria-label="„{task.title}“ bearbeiten"
 			onclick={() => (editingId = task.id)}>✎</button
