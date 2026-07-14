@@ -1,0 +1,165 @@
+<script lang="ts">
+	import { enhance } from '$app/forms';
+	import { formatDate, formatDeadline, daysUntil } from '$lib/format';
+	import {
+		PRIORITY_LABELS,
+		TASK_STATUSES,
+		TASK_STATUS_LABELS,
+		UNI_TASK_TYPE_LABELS
+	} from '$lib/labels';
+
+	let { data, form } = $props();
+
+	// GET-Filter als Query-String bauen (leere Werte fallen weg).
+	function filterQuery(patch: Record<string, string | null>): string {
+		const params = new URLSearchParams();
+		const merged = {
+			class: data.filter.classId === null ? null : String(data.filter.classId),
+			type: data.filter.taskType,
+			status: data.filter.status,
+			...patch
+		};
+		for (const [key, value] of Object.entries(merged)) {
+			if (value) params.set(key, value);
+		}
+		const qs = params.toString();
+		return qs ? `/uni/tasks?${qs}` : '/uni/tasks';
+	}
+</script>
+
+<svelte:head><title>Uni-Tasks · Zentrale</title></svelte:head>
+
+<div class="page-head">
+	<div>
+		<p class="eyebrow">🎓 Uni</p>
+		<h1>Task-Datenbank</h1>
+		<p class="lede" style="margin-bottom:0;">
+			Alle Uni-Tasks über alle Semester — inklusive erledigter. Wochenplanung passiert im
+			<a href="/uni">Uni-Modul</a>.
+		</p>
+	</div>
+</div>
+
+{#if form?.message}<p class="form-error">{form.message}</p>{/if}
+
+<div class="filters">
+	<a class="fchip" class:on={data.filter.status === null} href={filterQuery({ status: null })}
+		>Alle</a
+	>
+	{#each TASK_STATUSES as status (status)}
+		<a class="fchip" class:on={data.filter.status === status} href={filterQuery({ status })}
+			>{TASK_STATUS_LABELS[status]}</a
+		>
+	{/each}
+	<span class="sep"></span>
+	{#each Object.entries(UNI_TASK_TYPE_LABELS) as [value, label] (value)}
+		<a
+			class="fchip mono"
+			class:on={data.filter.taskType === value}
+			href={filterQuery({ type: data.filter.taskType === value ? null : value })}>{label}</a
+		>
+	{/each}
+</div>
+
+<div class="filters">
+	<a class="fchip" class:on={data.filter.classId === null} href={filterQuery({ class: null })}
+		>Alle Module</a
+	>
+	{#each data.allClasses as cls (cls.id)}
+		<a
+			class="fchip"
+			class:on={data.filter.classId === cls.id}
+			href={filterQuery({ class: data.filter.classId === cls.id ? null : String(cls.id) })}
+			>{cls.name}</a
+		>
+	{/each}
+</div>
+
+<h2 class="sect">Tasks · {data.tasks.length}</h2>
+<div class="card">
+	{#if data.tasks.length === 0}
+		<p class="dim" style="margin:0;">Keine Tasks für diesen Filter.</p>
+	{:else}
+		<div class="rows">
+			{#each data.tasks as task (task.id)}
+				<div class="row">
+					<form class="inline" method="POST" action="?/toggle" use:enhance>
+						<input type="hidden" name="id" value={task.id} />
+						<button
+							class="cbox"
+							class:checked={task.status === 'done'}
+							aria-label="„{task.title}“ {task.status === 'done' ? 'wieder öffnen' : 'abhaken'}"
+							>{task.status === 'done' ? '✓' : ''}</button
+						>
+					</form>
+					<span class="title" class:done-text={task.status === 'done'}>{task.title}</span>
+					{#if task.class_name}<span class="chip">{task.class_name}</span>{/if}
+					{#if task.task_type}
+						<span class="chip mono">{UNI_TASK_TYPE_LABELS[task.task_type]}</span>
+					{/if}
+					<form class="inline" method="POST" action="?/status" use:enhance>
+						<input type="hidden" name="id" value={task.id} />
+						<select
+							name="status"
+							class="status-select mono"
+							onchange={(e) => e.currentTarget.form?.requestSubmit()}
+						>
+							{#each TASK_STATUSES as status (status)}
+								<option value={status} selected={task.status === status}
+									>{TASK_STATUS_LABELS[status]}</option
+								>
+							{/each}
+						</select>
+						<noscript><button class="fchip">Setzen</button></noscript>
+					</form>
+					{#if task.priority}
+						<span class="badge {PRIORITY_LABELS[task.priority].tone}"
+							>{PRIORITY_LABELS[task.priority].label}</span
+						>
+					{/if}
+					{#if task.deadline}
+						<span class="due" class:soon={daysUntil(task.deadline) <= 3}
+							>{formatDeadline(task.deadline)}</span
+						>
+					{/if}
+					{#if task.last_revision}
+						<span class="chip mono" title="Last Revision">↻ {formatDate(task.last_revision)}</span>
+					{/if}
+					{#if task.status !== 'done' && task.status !== 'wont_do'}
+						<form class="inline" method="POST" action="?/week" use:enhance>
+							<input type="hidden" name="id" value={task.id} />
+							<input type="hidden" name="on" value={task.this_week ? '0' : '1'} />
+							<button
+								class="fchip"
+								title={task.this_week ? 'Zurück ins Backlog' : 'Für diese Woche einplanen'}
+								>{task.this_week ? '→ Backlog' : '→ This Week'}</button
+							>
+						</form>
+					{/if}
+					<form class="inline" method="POST" action="?/revise" use:enhance>
+						<input type="hidden" name="id" value={task.id} />
+						<button class="iconbtn" title="Heute revidiert (Last Revision setzen)">↻</button>
+					</form>
+					<form class="inline" method="POST" action="?/delete" use:enhance>
+						<input type="hidden" name="id" value={task.id} />
+						<button class="iconbtn" title="Löschen" aria-label="„{task.title}“ löschen">✕</button>
+					</form>
+				</div>
+			{/each}
+		</div>
+	{/if}
+</div>
+<p class="dimmer" style="font-size:12.5px; margin-top:14px;">
+	↻ stempelt „Last Revision“ auf heute — fürs Wiederholen von VL-Material vor der Klausur.
+</p>
+
+<style>
+	.status-select {
+		font-size: 12px;
+		padding: 3px 6px;
+		border: 1px solid var(--line);
+		border-radius: 7px;
+		background: var(--surface);
+		color: inherit;
+	}
+</style>

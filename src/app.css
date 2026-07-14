@@ -1,0 +1,907 @@
+/* Zentrale design system — "ein ruhiges Instrumentenbrett".
+ *
+ * Editorial serif for the few big things, monospace for data, one green
+ * accent. E-Ink rule (hard constraint): state is always symbol + word,
+ * color is reinforcement — the app must survive grayscale.
+ * Both themes are token-level: components only ever read the variables. */
+
+:root {
+	--ground: #f6f6f2;
+	--surface: #ffffff;
+	--surface2: #eff0ea;
+	--ink: #1d211c;
+	--ink2: #585f56;
+	--ink3: #8a9186;
+	--line: #dcdfd6;
+	--accent: #2f8156;
+	--accent-soft: #e3eee7;
+	--warn: #a66a1e;
+	--crit: #b3362c;
+	--font-display: Charter, 'Bitstream Charter', 'Source Serif 4', Georgia, serif;
+	--font-ui: system-ui, 'Segoe UI', sans-serif;
+	--font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--ground: #161815;
+		--surface: #1d201c;
+		--surface2: #242822;
+		--ink: #e7eae3;
+		--ink2: #a3aa9e;
+		--ink3: #767d72;
+		--line: #31362f;
+		--accent: #4fa873;
+		--accent-soft: #24352b;
+		--warn: #c27f24;
+		--crit: #d06a5f;
+	}
+}
+
+* {
+	box-sizing: border-box;
+}
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+body {
+	background: var(--ground);
+	color: var(--ink);
+	font-family: var(--font-ui);
+	font-size: 15px;
+	line-height: 1.5;
+}
+a {
+	color: var(--accent);
+}
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+/* ---------- app shell ---------- */
+.app {
+	display: flex;
+	min-height: 100vh;
+}
+.side {
+	width: 224px;
+	flex: 0 0 224px;
+	border-right: 1px solid var(--line);
+	padding: 24px 14px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	background: var(--ground);
+}
+.brand {
+	font-family: var(--font-display);
+	font-size: 22px;
+	font-weight: 700;
+	padding: 0 10px 4px;
+	color: var(--ink);
+	text-decoration: none;
+}
+.brand small {
+	display: block;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 400;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--ink3);
+	margin-top: 2px;
+}
+.side hr {
+	border: 0;
+	border-top: 1px solid var(--line);
+	margin: 12px 6px;
+	width: auto;
+}
+.nav-link {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-family: var(--font-ui);
+	font-size: 14.5px;
+	color: var(--ink2);
+	text-decoration: none;
+	border-radius: 7px;
+	padding: 8px 10px;
+}
+.nav-link:hover {
+	background: var(--surface2);
+	color: var(--ink);
+}
+.nav-link[aria-current='page'] {
+	background: var(--surface);
+	color: var(--ink);
+	font-weight: 600;
+	box-shadow: inset 0 0 0 1px var(--line);
+}
+.nav-link .em {
+	width: 20px;
+	text-align: center;
+}
+.nav-link .count {
+	margin-left: auto;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--ink3);
+}
+.nav-link.soon {
+	color: var(--ink3);
+	cursor: default;
+}
+.nav-link.soon:hover {
+	background: none;
+	color: var(--ink3);
+}
+.nav-link.soon .count {
+	font-size: 10px;
+	letter-spacing: 0.06em;
+}
+.side .push {
+	flex: 1;
+}
+.review-pill {
+	display: block;
+	margin-top: 8px;
+	text-align: center;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.03em;
+	color: var(--warn);
+	padding: 6px 8px;
+	border: 1px dashed var(--line);
+	border-radius: 7px;
+	text-decoration: none;
+}
+
+a.review-pill:hover {
+	border-style: solid;
+	border-color: var(--warn);
+}
+main {
+	flex: 1;
+	min-width: 0;
+	padding: 36px 40px 72px;
+}
+.content {
+	max-width: 1040px;
+	margin: 0 auto;
+}
+
+/* ---------- typography ---------- */
+.eyebrow {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--ink3);
+	margin: 0 0 6px;
+}
+h1 {
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 32px;
+	line-height: 1.15;
+	margin: 0 0 4px;
+	text-wrap: balance;
+}
+.lede {
+	color: var(--ink2);
+	margin: 0 0 26px;
+	font-size: 15px;
+	max-width: 68ch;
+}
+h2.sect {
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--ink2);
+	margin: 34px 0 12px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+h2.sect .soft {
+	font-weight: 400;
+	letter-spacing: 0.04em;
+	color: var(--ink3);
+	text-transform: none;
+}
+h2.sect::after {
+	content: '';
+	flex: 1;
+	border-top: 1px solid var(--line);
+}
+.page-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 26px;
+}
+.page-head .actions {
+	display: flex;
+	gap: 8px;
+	margin-top: 14px;
+	flex-wrap: wrap;
+}
+
+/* ---------- cards & grids ---------- */
+.grid {
+	display: grid;
+	gap: 16px;
+}
+.grid.cols-3 {
+	grid-template-columns: repeat(3, 1fr);
+}
+.grid.cols-2 {
+	grid-template-columns: repeat(2, 1fr);
+}
+.span-2 {
+	grid-column: span 2;
+}
+.span-3 {
+	grid-column: span 3;
+}
+.card {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	padding: 18px 20px;
+	min-width: 0;
+}
+.card h3 {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.13em;
+	text-transform: uppercase;
+	color: var(--ink3);
+	margin: 0 0 12px;
+}
+.card .more {
+	display: inline-block;
+	margin-top: 12px;
+	font-size: 13px;
+	color: var(--accent);
+	text-decoration: none;
+	font-weight: 600;
+}
+.card .more:hover {
+	text-decoration: underline;
+}
+.card.dashed {
+	border-style: dashed;
+}
+
+/* ---------- chips & badges ---------- */
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--ink2);
+	background: var(--surface2);
+	border-radius: 20px;
+	padding: 2px 9px;
+	white-space: nowrap;
+}
+.chip.accent {
+	background: var(--accent-soft);
+	color: var(--accent);
+	font-weight: 600;
+}
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+.badge.good {
+	color: var(--accent);
+}
+.badge.warn {
+	color: var(--warn);
+}
+.badge.crit {
+	color: var(--crit);
+}
+.mono {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+}
+.dim {
+	color: var(--ink2);
+}
+.dimmer {
+	color: var(--ink3);
+}
+
+/* ---------- progress ---------- */
+.prog {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.prog .track {
+	flex: 1;
+	height: 8px;
+	border-radius: 4px;
+	background: var(--surface2);
+	border: 1px solid var(--line);
+	overflow: hidden;
+}
+.prog .fill {
+	height: 100%;
+	background: var(--accent);
+	border-radius: 3px 0 0 3px;
+}
+.prog .num {
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+	color: var(--ink2);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+/* ---------- rows ---------- */
+.rows {
+	display: flex;
+	flex-direction: column;
+}
+.row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 9px 2px;
+	border-bottom: 1px solid var(--line);
+	min-width: 0;
+}
+.rows .row:last-child {
+	border-bottom: 0;
+}
+.row .title {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.row .title.done-text {
+	text-decoration: line-through;
+	color: var(--ink3);
+}
+form.inline {
+	display: contents;
+}
+.cbox {
+	width: 17px;
+	height: 17px;
+	flex: 0 0 17px;
+	border: 1.5px solid var(--ink3);
+	border-radius: 4px;
+	background: var(--surface);
+	cursor: pointer;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
+	color: transparent;
+}
+.cbox.checked {
+	background: var(--ink);
+	border-color: var(--ink);
+	color: var(--ground);
+}
+.due {
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+	color: var(--ink2);
+	white-space: nowrap;
+}
+.due.soon {
+	color: var(--crit);
+	font-weight: 600;
+}
+
+/* ---------- filters & buttons ---------- */
+.filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 0 0 18px;
+}
+.fchip {
+	font-family: var(--font-mono);
+	font-size: 12px;
+	color: var(--ink2);
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 20px;
+	padding: 4px 13px;
+	cursor: pointer;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+.fchip:hover {
+	color: var(--ink);
+}
+.fchip.on {
+	background: var(--ink);
+	color: var(--ground);
+	border-color: var(--ink);
+}
+.filters .sep {
+	width: 1px;
+	height: 20px;
+	background: var(--line);
+	margin: 0 4px;
+}
+.btn {
+	font-family: var(--font-ui);
+	font-size: 13.5px;
+	font-weight: 600;
+	color: var(--ground);
+	background: var(--ink);
+	border: 1px solid var(--ink);
+	border-radius: 7px;
+	padding: 7px 16px;
+	cursor: pointer;
+}
+.btn.ghost {
+	background: var(--surface);
+	color: var(--ink);
+	border-color: var(--line);
+}
+.btn.ghost:hover {
+	border-color: var(--ink2);
+}
+.iconbtn {
+	background: none;
+	border: 0;
+	color: var(--ink3);
+	cursor: pointer;
+	font-size: 13px;
+	padding: 2px 4px;
+	border-radius: 4px;
+}
+.iconbtn:hover {
+	color: var(--crit);
+	background: var(--surface2);
+}
+
+/* ---------- forms ---------- */
+.form-row {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	align-items: flex-end;
+}
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.field > span {
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--ink3);
+}
+input[type='text'],
+input[type='date'],
+input[type='number'],
+input[type='month'],
+select {
+	font-family: var(--font-ui);
+	font-size: 14px;
+	color: var(--ink);
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 7px;
+	padding: 7px 10px;
+	color-scheme: light dark;
+}
+input[type='text']:focus,
+input[type='date']:focus,
+select:focus {
+	border-color: var(--accent);
+	outline: none;
+}
+label.check {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	font-size: 13.5px;
+	color: var(--ink2);
+	padding-bottom: 8px;
+	cursor: pointer;
+}
+.form-error {
+	color: var(--crit);
+	font-size: 13.5px;
+	font-weight: 600;
+	margin: 10px 0 0;
+}
+.form-error::before {
+	content: '⚠ ';
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px) {
+	.app {
+		flex-direction: column;
+	}
+	.side {
+		width: auto;
+		flex: none;
+		flex-direction: row;
+		align-items: center;
+		overflow-x: auto;
+		padding: 10px 14px;
+		gap: 6px;
+		border-right: 0;
+		border-bottom: 1px solid var(--line);
+	}
+	.brand {
+		font-size: 17px;
+		padding: 0 8px 0 0;
+	}
+	.brand small,
+	.side hr,
+	.review-pill {
+		display: none;
+	}
+	.nav-link {
+		white-space: nowrap;
+		padding: 6px 10px;
+	}
+	.nav-link .count {
+		display: none;
+	}
+	main {
+		padding: 24px 18px 60px;
+	}
+	.grid.cols-3,
+	.grid.cols-2 {
+		grid-template-columns: 1fr;
+	}
+	.span-2,
+	.span-3 {
+		grid-column: auto;
+	}
+	.page-head {
+		flex-direction: column;
+	}
+}
+
+/* ── Finance module (brick 4) ─────────────────────────────────────────────
+ * The ported Budget-App pages keep their markup vocabulary (tables, stats,
+ * notices, editors); these classes express it in Zentrale tokens. */
+
+.stack {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+
+.muted {
+	color: var(--ink2);
+}
+
+.small {
+	font-size: 13px;
+}
+
+.nums {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+}
+
+.table-wrap {
+	overflow-x: auto;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
+}
+
+th {
+	text-align: left;
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: var(--ink3);
+	padding: 6px 10px 6px 0;
+	border-bottom: 1px solid var(--line);
+}
+
+td {
+	padding: 9px 10px 9px 0;
+	border-bottom: 1px solid var(--line);
+	vertical-align: top;
+}
+
+tr:last-child > td {
+	border-bottom: none;
+}
+
+th.num,
+td.num {
+	text-align: right;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+tr.total > td {
+	font-weight: 650;
+	border-top: 2px solid var(--ink);
+	border-bottom: none;
+}
+
+tr.inactive > td {
+	color: var(--ink3);
+}
+
+.notice {
+	margin: 0;
+	padding: 12px 16px;
+	border: 1px solid var(--line);
+	border-left: 3px solid var(--accent);
+	border-radius: 10px;
+	background: var(--surface);
+	font-size: 14px;
+}
+
+.notice.warn {
+	border-left-color: var(--warn);
+}
+
+.stats {
+	display: flex;
+	gap: 18px;
+	flex-wrap: wrap;
+}
+
+.stats > .stat {
+	flex: 1;
+	min-width: 170px;
+}
+
+.stat .label {
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: var(--ink3);
+	margin-bottom: 4px;
+}
+
+.stat .value {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: 24px;
+	font-weight: 650;
+}
+
+.stat .value.hero {
+	font-size: 40px;
+	letter-spacing: -0.02em;
+}
+
+details.editor {
+	border: 1px dashed var(--line);
+	border-radius: 12px;
+	padding: 14px 18px;
+	background: transparent;
+}
+
+details.editor[open] {
+	background: var(--surface);
+	border-style: solid;
+}
+
+details.editor > summary {
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 14px;
+	color: var(--ink2);
+}
+
+details.editor[open] > summary {
+	margin-bottom: 14px;
+	color: var(--ink);
+}
+
+.input-amount {
+	text-align: right;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	max-width: 130px;
+}
+
+.bar-row {
+	display: grid;
+	grid-template-columns: minmax(90px, auto) 1fr auto;
+	align-items: center;
+	gap: 12px;
+	padding: 4px 0;
+}
+
+.badge.strong {
+	border-color: var(--ink2);
+	color: var(--ink);
+	font-weight: 650;
+}
+
+.actions {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.btn.small {
+	padding: 5px 10px;
+	font-size: 12.5px;
+}
+
+/* ── Editor content (brick 5) ─────────────────────────────────────────────
+ * Applies to both the server-rendered read-only HTML and the live Tiptap
+ * (.ProseMirror) content — same selectors, same look. */
+
+.editor-content :is(.ProseMirror) {
+	outline: none;
+}
+
+.editor-content h1 {
+	font-size: 26px;
+	margin: 22px 0 8px;
+}
+
+.editor-content h2 {
+	font-family: var(--font-display);
+	font-size: 21px;
+	font-weight: 650;
+	margin: 20px 0 6px;
+}
+
+.editor-content h3 {
+	font-size: 17px;
+	margin: 16px 0 4px;
+}
+
+.editor-content p {
+	margin: 8px 0;
+	line-height: 1.65;
+}
+
+.editor-content ul,
+.editor-content ol {
+	padding-left: 26px;
+	margin: 8px 0;
+}
+
+.editor-content li > p {
+	margin: 3px 0;
+}
+
+.editor-content ul[data-type='taskList'] {
+	list-style: none;
+	padding-left: 4px;
+}
+
+.editor-content ul[data-type='taskList'] li {
+	display: flex;
+	gap: 9px;
+	align-items: baseline;
+}
+
+.editor-content ul[data-type='taskList'] input[type='checkbox'] {
+	width: 15px;
+	height: 15px;
+	accent-color: var(--accent);
+}
+
+.editor-content blockquote {
+	margin: 12px 0;
+	padding: 2px 0 2px 16px;
+	border-left: 3px solid var(--accent);
+	color: var(--ink2);
+}
+
+.editor-content code {
+	font-family: var(--font-mono);
+	font-size: 0.9em;
+	background: var(--surface2);
+	border: 1px solid var(--line);
+	border-radius: 5px;
+	padding: 1px 5px;
+}
+
+.editor-content pre {
+	background: var(--surface2);
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	padding: 14px 16px;
+	overflow-x: auto;
+	margin: 12px 0;
+}
+
+.editor-content pre code {
+	background: none;
+	border: none;
+	padding: 0;
+	font-size: 13px;
+}
+
+.editor-content hr {
+	border: none;
+	border-top: 2px solid var(--line);
+	margin: 22px 0;
+}
+
+.editor-content table {
+	margin: 12px 0;
+	font-size: 13.5px;
+}
+
+.editor-content th,
+.editor-content td {
+	border: 1px solid var(--line);
+	padding: 6px 10px;
+	text-align: left;
+}
+
+.editor-content th {
+	background: var(--surface2);
+	font-family: var(--font-ui);
+	font-size: 13px;
+	text-transform: none;
+	letter-spacing: 0;
+	color: var(--ink);
+}
+
+/* Sidebar quick capture (brick 5) — one input, straight to the Notes inbox. */
+.capture {
+	margin-top: 10px;
+	padding: 0 4px;
+}
+
+.capture input {
+	width: 100%;
+	background: var(--surface);
+	border: 1px dashed var(--line);
+	border-radius: 9px;
+	padding: 7px 10px;
+	font-size: 13px;
+	color: var(--ink);
+}
+
+.capture input:focus {
+	border-style: solid;
+	border-color: var(--accent);
+	outline: none;
+}
