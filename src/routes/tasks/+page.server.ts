@@ -5,6 +5,7 @@ import {
 	listBacklog,
 	weekStats,
 	createTask,
+	updateTask,
 	toggleDone,
 	setWeek,
 	deleteTask
@@ -32,6 +33,14 @@ export const actions: Actions = {
 			priority: oneOfOrNull(data, 'priority', PRIORITIES),
 			deadline: strOrNull(data, 'deadline'),
 			thisWeek: checkbox(data, 'this_week')
+		});
+	}),
+	update: action((_event, data) => {
+		updateTask(int(data, 'id'), {
+			title: str(data, 'title', 'Titel'),
+			area: oneOf(data, 'area', AREAS),
+			priority: oneOfOrNull(data, 'priority', PRIORITIES),
+			deadline: strOrNull(data, 'deadline')
 		});
 	}),
 	toggle: action((_event, data) => {

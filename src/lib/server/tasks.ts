@@ -89,6 +89,16 @@ export function createTask(input: {
 		);
 }
 
+/** Edit an existing task's core fields (title, area, priority, deadline). */
+export function updateTask(
+	id: number,
+	input: { title: string; area: Area; priority: Priority | null; deadline: string | null }
+): void {
+	getDb()
+		.prepare(`UPDATE tasks SET title = ?, area = ?, priority = ?, deadline = ? WHERE id = ?`)
+		.run(input.title, input.area, input.priority, input.deadline, id);
+}
+
 /** Check off / un-check a task. */
 export function toggleDone(id: number): void {
 	getDb()

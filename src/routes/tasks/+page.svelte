@@ -7,14 +7,54 @@
 
 	let { data, form } = $props();
 
+	let editingId = $state<number | null>(null);
+
 	function filterHref(area: Area | null): string {
 		return area ? `/tasks?area=${area}` : '/tasks';
 	}
 </script>
 
-<svelte:head><title>Tasks · Zentrale</title></svelte:head>
+<svelte:head><title>TO-DOs · Zentrale</title></svelte:head>
+
+{#snippet editRow(task: Task)}
+	<form
+		class="row editrow"
+		method="POST"
+		action="?/update"
+		use:enhance={() => {
+			return async ({ update, result }) => {
+				await update({ reset: false });
+				if (result.type === 'success') editingId = null;
+			};
+		}}
+	>
+		<input type="hidden" name="id" value={task.id} />
+		<label class="field" style="flex:1; min-width:200px;">
+			<span>Titel</span>
+			<input type="text" name="title" required value={task.title} />
+		</label>
+		<label class="field">
+			<span>Bereich</span>
+			<select name="area">
+				{#each AREAS as area (area)}
+					<option value={area} selected={task.area === area}>{AREA_LABELS[area]}</option>
+				{/each}
+			</select>
+		</label>
+		<PrioritySelect value={task.priority} />
+		<label class="field">
+			<span>Deadline</span>
+			<input type="date" name="deadline" value={task.deadline ?? ''} />
+		</label>
+		<button class="btn">✓ Speichern</button>
+		<button class="fchip" type="button" onclick={() => (editingId = null)}>Abbrechen</button>
+	</form>
+{/snippet}
 
 {#snippet taskRow(task: Task, inWeek: boolean)}
+	{#if editingId === task.id}
+		{@render editRow(task)}
+	{:else}
 	<div class="row">
 		<form class="inline" method="POST" action="?/toggle" use:enhance>
 			<input type="hidden" name="id" value={task.id} />
@@ -46,16 +86,23 @@
 				>
 			</form>
 		{/if}
+		<button
+			class="iconbtn"
+			title="Bearbeiten"
+			aria-label="„{task.title}“ bearbeiten"
+			onclick={() => (editingId = task.id)}>✎</button
+		>
 		<form class="inline" method="POST" action="?/delete" use:enhance>
 			<input type="hidden" name="id" value={task.id} />
 			<button class="iconbtn" title="Löschen" aria-label="„{task.title}“ löschen">✕</button>
 		</form>
 	</div>
+	{/if}
 {/snippet}
 
 <div class="page-head">
 	<div>
-		<p class="eyebrow">Tasks</p>
+		<p class="eyebrow">TO-DOs</p>
 		<h1>Alltag &amp; Orga</h1>
 		<p class="lede" style="margin-bottom:0;">
 			Eigene Datenbank. <strong>Uni</strong> heißt hier: organisatorische To-dos — Lernaufgaben
@@ -134,3 +181,10 @@
 	Erledigte Tasks bleiben 7 Tage sichtbar und verschwinden dann aus allen Ansichten (nie gelöscht).
 	Sonntags-Review: Inbox leeren → Woche befüllen (→ This Week).
 </p>
+
+<style>
+	.editrow {
+		align-items: flex-end;
+		gap: 10px;
+	}
+</style>
