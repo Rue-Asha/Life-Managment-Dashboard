@@ -33,10 +33,13 @@ export function formatLongDate(d: Date = new Date()): string {
 	return longDateFmt.format(d);
 }
 
-/** ISO date → e.g. "Do, 16.07." for deadline chips. */
+/** ISO date → e.g. "Do., 16.07." for deadline chips. Some ICU builds emit the
+ *  trailing month dot themselves — only append when it's missing. */
 export function formatDeadline(iso: string): string {
 	const d = new Date(iso + 'T00:00:00');
-	return Number.isNaN(d.getTime()) ? iso : shortDeadlineFmt.format(d) + '.';
+	if (Number.isNaN(d.getTime())) return iso;
+	const out = shortDeadlineFmt.format(d);
+	return out.endsWith('.') ? out : out + '.';
 }
 
 /** Whole days from today (local) to the ISO date; negative = overdue. */
