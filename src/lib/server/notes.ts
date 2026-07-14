@@ -47,12 +47,13 @@ export function bereichCounts(): Record<string, number> {
 	return Object.fromEntries(rows.map((r) => [r.bereich, r.n]));
 }
 
-/** Quick capture: title only, lands in the inbox with an empty document. */
-export function createNote(title: string): number {
+/** Quick capture: title only. Without a Bereich it lands in the inbox; with
+ *  one it is filed straight into that Bereich (inbox = 0), skipping the inbox. */
+export function createNote(title: string, bereich: Bereich | null = null): number {
 	const documentId = createDocument();
 	const result = getDb()
-		.prepare('INSERT INTO notes (title, document_id) VALUES (?, ?)')
-		.run(title, documentId);
+		.prepare('INSERT INTO notes (title, bereich, inbox, document_id) VALUES (?, ?, ?, ?)')
+		.run(title, bereich, bereich ? 0 : 1, documentId);
 	return Number(result.lastInsertRowid);
 }
 

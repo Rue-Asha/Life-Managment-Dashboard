@@ -30,7 +30,7 @@
 		<p class="eyebrow">Notes</p>
 		<h1>Notes</h1>
 		<p class="lede" style="margin-bottom:0;">
-			Capture zuerst, einsortieren sonntags — der Bereich wird auf der Notiz-Seite gesetzt.
+			Schnell erfassen — in die Inbox oder direkt in einen Bereich einsortiert.
 		</p>
 	</div>
 </div>
@@ -40,10 +40,19 @@
 	<form method="POST" action="?/create" use:enhance>
 		<div class="form-row">
 			<label class="field" style="flex:1; min-width:240px;">
-				<span>Quick Capture → Inbox</span>
+				<span>Quick Capture</span>
 				<input type="text" name="title" required placeholder="Gedanke, Link, Idee …" />
 			</label>
-			<button class="btn">＋ In die Inbox</button>
+			<label class="field" style="min-width:160px;">
+				<span>Ziel</span>
+				<select name="bereich">
+					<option value="">Inbox</option>
+					{#each BEREICHE as bereich (bereich)}
+						<option value={bereich}>{BEREICH_LABELS[bereich]}</option>
+					{/each}
+				</select>
+			</label>
+			<button class="btn">Speichern</button>
 		</div>
 	</form>
 	{#if form?.message}<p class="form-error">{form.message}</p>{/if}

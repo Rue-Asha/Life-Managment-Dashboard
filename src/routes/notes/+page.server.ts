@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { listInbox, listNotes, bereichCounts, createNote, deleteNote } from '$lib/server/notes';
-import { action, int, str } from '$lib/server/forms';
+import { action, int, oneOfOrNull, str } from '$lib/server/forms';
 import { BEREICHE, type Bereich } from '$lib/labels';
 
 export const load: PageServerLoad = ({ url }) => {
@@ -16,7 +16,7 @@ export const load: PageServerLoad = ({ url }) => {
 
 export const actions: Actions = {
 	create: action((_event, data) => {
-		createNote(str(data, 'title', 'Titel'));
+		createNote(str(data, 'title', 'Titel'), oneOfOrNull(data, 'bereich', BEREICHE));
 	}),
 	delete: action((_event, data) => {
 		deleteNote(int(data, 'id'));
