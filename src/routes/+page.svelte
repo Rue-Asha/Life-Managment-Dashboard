@@ -8,9 +8,41 @@
 		daysUntil,
 		isoWeek
 	} from '$lib/format';
-	import { PRIORITY_LABELS, parseTags } from '$lib/labels';
+	import { PRIORITY_LABELS, parseTags, WEEKDAYS } from '$lib/labels';
+	import type { AgendaEvent } from '$lib/server/ics';
 
 	let { data } = $props();
+
+	// Kalender-Wochenübersicht (aus dem Proton-ICS-Feed).
+	function calIso(d: Date): string {
+		const y = d.getFullYear();
+		const m = String(d.getMonth() + 1).padStart(2, '0');
+		const day = String(d.getDate()).padStart(2, '0');
+		return `${y}-${m}-${day}`;
+	}
+	const calWeekStart = $derived(new Date(`${data.calWeekStart}T00:00:00`));
+	const calDays = $derived(
+		Array.from({ length: 7 }, (_, i) => {
+			const d = new Date(calWeekStart);
+			d.setDate(d.getDate() + i);
+			return d;
+		})
+	);
+	const calByDay = $derived.by(() => {
+		const map = new Map<string, AgendaEvent[]>();
+		for (const ev of data.calEvents) {
+			const key = calIso(new Date(ev.start));
+			(map.get(key) ?? map.set(key, []).get(key)!).push(ev);
+		}
+		return map;
+	});
+	const todayIso = calIso(new Date());
+	function calEventsFor(d: Date): AgendaEvent[] {
+		return calByDay.get(calIso(d)) ?? [];
+	}
+	function evTime(ev: AgendaEvent): string {
+		return new Date(ev.start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+	}
 
 	const now = new Date();
 	const greeting =
@@ -114,75 +146,6 @@
 	)}
 
 	<div class="card">
-		<h3>Kalender · Proton</h3>
-		{#if data.inboxCount > 0}
-			<p class="dim" style="margin:0 0 12px; font-size:13.5px;">
-				<a href="/notes">{data.inboxCount}
-					{data.inboxCount === 1 ? 'Notiz' : 'Notizen'} in der Inbox</a> — sonntags einsortieren.
-			</p>
-		{/if}
-		{#if !data.icsConfigured}
-			<p class="dim" style="margin:0 0 12px; font-size:13.5px;">
-				Read-only-Agenda: <span class="mono">PROTON_ICS_URL</span> in der <span class="mono">.env</span>
-				setzen (Proton → Kalender teilen → Link).
-			</p>
-		{:else if data.agenda.length === 0}
-			<p class="dim" style="margin:0 0 12px; font-size:13.5px;">
-				Keine Termine in den nächsten 14 Tagen.
-			</p>
-		{:else}
-			<div class="rows" style="margin-bottom:12px;">
-				{#each data.agenda.slice(0, 6) as event (event.start + event.summary)}
-					<div class="row" style="font-size:13.5px;">
-						<span class="mono dim" style="font-size:12px; white-space:nowrap;">
-							{formatDeadline(event.start.slice(0, 10))}{#if !event.allDay}
-								{new Date(event.start).toLocaleTimeString('de-DE', {
-									hour: '2-digit',
-									minute: '2-digit'
-								})}{/if}
-						</span>
-						<span class="title">{event.summary}</span>
-					</div>
-				{/each}
-			</div>
-		{/if}
-		<a class="more" href="/calendar">Ganzer Kalender →</a>
-		<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
-			<a class="fchip" href="https://calendar.proton.me" target="_blank" rel="noreferrer"
-				>↗ Proton Calendar</a
-			>
-			<a class="fchip" href="https://mail.proton.me" target="_blank" rel="noreferrer"
-				>↗ Proton Mail</a
-			>
-		</div>
-	</div>
-
-	<div class="card span-2">
-		<h3>Netto-Vermögen</h3>
-		<p class="mono" style="font-size:34px; font-weight:650; margin:0 0 10px; letter-spacing:-0.02em;">
-			{formatCentsWhole(data.netWorthCents)}
-		</p>
-		{#if data.dueSoon.length > 0}
-			<div class="rows">
-				{#each data.dueSoon as o (o.id)}
-					<div class="row">
-						<span class="title">{o.name}</span>
-						<span class="due" class:soon={daysUntil(o.next_due) <= 7}
-							>{formatDeadline(o.next_due)}</span
-						>
-						<span class="mono">{formatCents(o.amount_cents)}</span>
-					</div>
-				{/each}
-			</div>
-		{:else}
-			<p class="dim" style="margin:0; font-size:13.5px;">
-				Keine Zahlungen in den nächsten 14 Tagen fällig.
-			</p>
-		{/if}
-		<a class="more" href="/finance">Zum Finanz-Dashboard →</a>
-	</div>
-
-	<div class="card">
 		<h3>Heute · Schedule</h3>
 		{#if data.today?.day}
 			<p style="margin:0 0 4px;">
@@ -223,6 +186,66 @@
 		{/if}
 		<a class="more" href="/curriculum">Zum Schedule →</a>
 	</div>
+
+	<div class="card span-3">
+		<h3 class="cal-h3">
+			<span>Kalender · Diese Woche</span>
+			<a
+				class="more"
+				style="margin:0;"
+				href="https://calendar.proton.me"
+				target="_blank"
+				rel="noreferrer">↗ In Proton öffnen</a
+			>
+		</h3>
+		{#if !data.icsConfigured}
+			<p class="dim" style="margin:0; font-size:13.5px;">
+				<span class="mono">PROTON_ICS_URL</span> in der <span class="mono">.env</span> setzen (Proton
+				→ Kalender teilen → Link) — dann erscheint hier deine Woche.
+			</p>
+		{:else}
+			<div class="calweek">
+				{#each calDays as d, i (calIso(d))}
+					<div class="calday" class:today={calIso(d) === todayIso}>
+						<p class="cdhead mono">{WEEKDAYS[i]} {d.getDate()}.{d.getMonth() + 1}.</p>
+						{#each calEventsFor(d) as ev (ev.start + ev.summary)}
+							<div class="cev" class:allday={ev.allDay}>
+								{#if !ev.allDay}<span class="ct mono">{evTime(ev)}</span>{/if}
+								<span class="cs">{ev.summary}</span>
+							</div>
+						{:else}
+							<span class="cempty">–</span>
+						{/each}
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
+
+	<div class="card span-2">
+		<h3>Netto-Vermögen</h3>
+		<p class="mono" style="font-size:34px; font-weight:650; margin:0 0 10px; letter-spacing:-0.02em;">
+			{formatCentsWhole(data.netWorthCents)}
+		</p>
+		{#if data.dueSoon.length > 0}
+			<div class="rows">
+				{#each data.dueSoon as o (o.id)}
+					<div class="row">
+						<span class="title">{o.name}</span>
+						<span class="due" class:soon={daysUntil(o.next_due) <= 7}
+							>{formatDeadline(o.next_due)}</span
+						>
+						<span class="mono">{formatCents(o.amount_cents)}</span>
+					</div>
+				{/each}
+			</div>
+		{:else}
+			<p class="dim" style="margin:0; font-size:13.5px;">
+				Keine Zahlungen in den nächsten 14 Tagen fällig.
+			</p>
+		{/if}
+		<a class="more" href="/finance">Zum Finanz-Dashboard →</a>
+	</div>
 </div>
 
 <style>
@@ -261,5 +284,77 @@
 	.quota-mini .done-q {
 		border-color: var(--accent);
 		color: var(--accent);
+	}
+
+	/* Kalender-Wochenübersicht */
+	.cal-h3 {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 10px;
+	}
+	.calweek {
+		display: grid;
+		grid-template-columns: repeat(7, minmax(0, 1fr));
+		gap: 8px;
+	}
+	.calday {
+		border: 1px solid var(--line);
+		border-radius: var(--r-md);
+		background: var(--surface);
+		padding: 8px 9px;
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+		min-height: 92px;
+	}
+	.calday.today {
+		border-color: var(--accent);
+		background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+	}
+	.cdhead {
+		font-size: 11px;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--ink3);
+		margin: 0 0 1px;
+	}
+	.calday.today .cdhead {
+		color: var(--accent);
+	}
+	.cev {
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+		font-size: 12px;
+		line-height: 1.3;
+		border-left: 2px solid var(--accent);
+		padding-left: 6px;
+	}
+	.cev.allday {
+		border-left-color: var(--warn);
+	}
+	.ct {
+		font-size: 10.5px;
+		color: var(--ink3);
+	}
+	.cs {
+		color: var(--ink);
+	}
+	.cempty {
+		color: var(--ink3);
+		font-size: 12px;
+	}
+
+	@media (max-width: 760px) {
+		.calweek {
+			display: flex;
+			overflow-x: auto;
+			padding-bottom: 6px;
+		}
+		.calday {
+			min-width: 132px;
+			flex: 0 0 auto;
+		}
 	}
 </style>

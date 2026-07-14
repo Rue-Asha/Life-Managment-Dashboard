@@ -4,7 +4,7 @@ import { uniListWeekOpen, uniListWeekDone, uniWeekStats, toggleUniDone } from '$
 import { netWorthNow } from '$lib/server/finance/networth';
 import { upcomingObligations } from '$lib/server/finance/obligations';
 import { todayView, tickQuota } from '$lib/server/curriculum';
-import { getAgenda, icsConfigured } from '$lib/server/ics';
+import { getEventsInRange, icsConfigured, type AgendaEvent } from '$lib/server/ics';
 import { action, int } from '$lib/server/forms';
 import type { Priority } from '$lib/labels';
 
@@ -98,9 +98,25 @@ export const load: PageServerLoad = async () => {
 		})),
 		today: todayView(),
 		icsConfigured: icsConfigured(),
-		agenda: await getAgenda()
+		...(await calendarWeek())
 	};
 };
+
+/** Current week (Mon–Sun) as a quick calendar overview on Home. */
+async function calendarWeek(): Promise<{ calWeekStart: string; calEvents: AgendaEvent[] }> {
+	const from = new Date();
+	from.setHours(0, 0, 0, 0);
+	from.setDate(from.getDate() - ((from.getDay() + 6) % 7)); // back to Monday
+	const to = new Date(from);
+	to.setDate(to.getDate() + 7);
+	const y = from.getFullYear();
+	const m = String(from.getMonth() + 1).padStart(2, '0');
+	const d = String(from.getDate()).padStart(2, '0');
+	return {
+		calWeekStart: `${y}-${m}-${d}`,
+		calEvents: icsConfigured() ? await getEventsInRange(from, to) : []
+	};
+}
 
 export const actions: Actions = {
 	toggle: action((_event, data) => {

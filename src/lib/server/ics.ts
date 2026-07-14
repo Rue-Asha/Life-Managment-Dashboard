@@ -146,8 +146,8 @@ export function icsConfigured(): boolean {
 	return Boolean(env.PROTON_ICS_URL);
 }
 
-/** Events within an arbitrary window (for the calendar). Errors degrade to the
- *  last cached feed, or an empty list. */
+/** Events within an arbitrary window (the Home week overview). Errors degrade
+ *  to the last cached feed, or an empty list — never block Home. */
 export async function getEventsInRange(from: Date, to: Date): Promise<AgendaEvent[]> {
 	try {
 		return expand(await loadRawEvents(), from, to);
@@ -155,12 +155,4 @@ export async function getEventsInRange(from: Date, to: Date): Promise<AgendaEven
 		console.error('Proton-ICS-Feed nicht erreichbar:', err);
 		return cache ? expand(cache.events, from, to) : [];
 	}
-}
-
-/** Cached agenda for the Home card; from today, next `days` days. */
-export async function getAgenda(days = 14): Promise<AgendaEvent[]> {
-	const from = new Date();
-	from.setHours(0, 0, 0, 0);
-	const to = new Date(from.getTime() + days * 86_400_000);
-	return (await getEventsInRange(from, to)).slice(0, 30);
 }
