@@ -8,7 +8,6 @@ import {
 	updatePhase,
 	deletePhase,
 	listPriorities,
-	updatePriority,
 	listTemplates,
 	createTemplate,
 	updateTemplate,
@@ -76,10 +75,6 @@ export const actions: Actions = {
 	}),
 	deletePhase: action((_event, data) => {
 		deletePhase(int(data, 'id'));
-	}),
-	// 25-5-Prioritäten
-	updatePriority: action((_event, data) => {
-		updatePriority(int(data, 'id'), str(data, 'name', 'Name'), strOrNull(data, 'note'));
 	}),
 	// Templates & Blöcke
 	createTemplate: action((_event, data) => {

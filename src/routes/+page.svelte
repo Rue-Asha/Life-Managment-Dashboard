@@ -15,42 +15,38 @@
 	const now = new Date();
 	const greeting =
 		now.getHours() < 11 ? 'Guten Morgen' : now.getHours() < 18 ? 'Guten Tag' : 'Guten Abend';
-	const pct = $derived(
-		data.stats.total === 0 ? 0 : Math.round((data.stats.done / data.stats.total) * 100)
+	const orgaPct = $derived(
+		data.orgaStats.total === 0 ? 0 : Math.round((data.orgaStats.done / data.orgaStats.total) * 100)
 	);
-
-	const SOURCE_LABELS = { alltag: 'Alltag', uni: 'Uni' } as const;
+	const uniPct = $derived(
+		data.uniStats.total === 0 ? 0 : Math.round((data.uniStats.done / data.uniStats.total) * 100)
+	);
 </script>
 
-<svelte:head><title>Zentrale</title></svelte:head>
-
-<p class="eyebrow">{formatLongDate(now)} · KW {isoWeek(now)}</p>
-<h1>{greeting}, Ornab.</h1>
-<p class="lede"><em>Ein Blick am Morgen. Ein Review am Sonntag. Mehr braucht's nicht.</em></p>
-
-<div class="grid cols-3">
-	<div class="card span-2">
-		<h3>This Week</h3>
-		{#if data.weekOpen.length === 0 && data.weekDone.length === 0}
-			<p class="dim">
-				Noch nichts für diese Woche geplant — in <a href="/tasks">Tasks</a> oder
-				<a href="/uni">Uni</a> Aufgaben anlegen oder aus dem Backlog holen.
-			</p>
+{#snippet weekCard(
+	title: string,
+	href: string,
+	moreLabel: string,
+	toggleAction: string,
+	open: typeof data.orgaOpen,
+	done: typeof data.orgaDone,
+	stats: { done: number; total: number },
+	pct: number,
+	emptyHint: string
+)}
+	<div class="card">
+		<h3>{title}</h3>
+		{#if open.length === 0 && done.length === 0}
+			<p class="dim" style="font-size:13.5px;">{@html emptyHint}</p>
 		{:else}
 			<div class="rows">
-				{#each data.weekOpen as item (`${item.source}-${item.id}`)}
+				{#each open as item (item.id)}
 					<div class="row">
-						<form
-							class="inline"
-							method="POST"
-							action={item.source === 'uni' ? '/?/toggleUni' : '/?/toggle'}
-							use:enhance
-						>
+						<form class="inline" method="POST" action={toggleAction} use:enhance>
 							<input type="hidden" name="id" value={item.id} />
 							<button class="cbox" aria-label="„{item.title}“ abhaken"></button>
 						</form>
 						<span class="title">{item.title}</span>
-						<span class="chip">{SOURCE_LABELS[item.source]}</span>
 						{#if item.sub}<span class="chip">{item.sub}</span>{/if}
 						{#if item.priority}
 							<span class="badge {PRIORITY_LABELS[item.priority].tone}"
@@ -61,35 +57,61 @@
 							<span class="due" class:soon={daysUntil(item.deadline) <= 3}
 								>{formatDeadline(item.deadline)}</span
 							>
-						{:else}
-							<span class="due">—</span>
 						{/if}
 					</div>
 				{/each}
-				{#each data.weekDone as item (`${item.source}-${item.id}`)}
+				{#each done as item (item.id)}
 					<div class="row">
-						<form
-							class="inline"
-							method="POST"
-							action={item.source === 'uni' ? '/?/toggleUni' : '/?/toggle'}
-							use:enhance
-						>
+						<form class="inline" method="POST" action={toggleAction} use:enhance>
 							<input type="hidden" name="id" value={item.id} />
 							<button class="cbox checked" aria-label="„{item.title}“ wieder öffnen">✓</button>
 						</form>
 						<span class="title done-text">{item.title}</span>
-						<span class="chip">{SOURCE_LABELS[item.source]}</span>
+						{#if item.sub}<span class="chip">{item.sub}</span>{/if}
 					</div>
 				{/each}
 			</div>
-			<div class="prog" style="margin-top:14px;">
-				<div class="track"><div class="fill" style="width:{pct}%"></div></div>
-				<span class="num">This Week · {data.stats.done}/{data.stats.total} erledigt</span>
-			</div>
+			{#if stats.total > 0}
+				<div class="prog" style="margin-top:14px;">
+					<div class="track"><div class="fill" style="width:{pct}%"></div></div>
+					<span class="num">{stats.done}/{stats.total} erledigt</span>
+				</div>
+			{/if}
 		{/if}
-		<a class="more" href="/tasks">Alle Tasks →</a>
-		<a class="more" href="/uni" style="margin-left:14px;">Uni Management →</a>
+		<a class="more" {href}>{moreLabel} →</a>
 	</div>
+{/snippet}
+
+<svelte:head><title>Zentrale</title></svelte:head>
+
+<p class="eyebrow">{formatLongDate(now)} · KW {isoWeek(now)}</p>
+<h1>{greeting}, Ornab.</h1>
+<p class="lede"><em>Ein Blick am Morgen. Ein Review am Sonntag. Mehr braucht's nicht.</em></p>
+
+<div class="grid cols-3">
+	{@render weekCard(
+		'Orga · This Week',
+		'/tasks',
+		'Alle To-Dos',
+		'/?/toggle',
+		data.orgaOpen,
+		data.orgaDone,
+		data.orgaStats,
+		orgaPct,
+		'Nichts geplant — in <a href="/tasks">To-Do-List</a> anlegen oder aus dem Backlog holen.'
+	)}
+
+	{@render weekCard(
+		'Uni · This Week',
+		'/uni',
+		'Uni Management',
+		'/?/toggleUni',
+		data.uniOpen,
+		data.uniDone,
+		data.uniStats,
+		uniPct,
+		'Nichts geplant — im <a href="/uni">Uni-Modul</a> anlegen oder aus dem Backlog holen.'
+	)}
 
 	<div class="card">
 		<h3>Kalender · Proton</h3>
@@ -124,7 +146,8 @@
 				{/each}
 			</div>
 		{/if}
-		<div style="display:flex; gap:8px; flex-wrap:wrap;">
+		<a class="more" href="/calendar">Ganzer Kalender →</a>
+		<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
 			<a class="fchip" href="https://calendar.proton.me" target="_blank" rel="noreferrer"
 				>↗ Proton Calendar</a
 			>

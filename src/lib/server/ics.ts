@@ -11,7 +11,7 @@ export interface AgendaEvent {
 }
 
 const CACHE_TTL_MS = 15 * 60 * 1000;
-let cache: { fetchedAt: number; events: AgendaEvent[] } | null = null;
+let cache: { fetchedAt: number; events: RawEvent[] } | null = null;
 
 /** Unfold RFC-5545 continuation lines and split into raw lines. */
 function unfold(ics: string): string[] {
@@ -111,16 +111,22 @@ function occurrencesInWindow(event: RawEvent, from: Date, to: Date): Date[] {
 	return result;
 }
 
-async function fetchAgenda(days: number): Promise<AgendaEvent[]> {
+/** Fetch + parse the raw feed once per TTL; navigation reuses this cache. */
+async function loadRawEvents(): Promise<RawEvent[]> {
 	const url = env.PROTON_ICS_URL;
 	if (!url) return [];
+	if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) return cache.events;
 	const response = await fetch(url, { headers: { accept: 'text/calendar' } });
 	if (!response.ok) throw new Error(`ICS-Feed antwortet mit ${response.status}`);
-	const from = new Date();
-	from.setHours(0, 0, 0, 0);
-	const to = new Date(from.getTime() + days * 86_400_000);
+	const events = parseEvents(await response.text());
+	cache = { fetchedAt: Date.now(), events };
+	return events;
+}
+
+/** Expand recurrences and materialise AgendaEvents inside [from, to). */
+function expand(rawEvents: RawEvent[], from: Date, to: Date): AgendaEvent[] {
 	const events: AgendaEvent[] = [];
-	for (const raw of parseEvents(await response.text())) {
+	for (const raw of rawEvents) {
 		const durationMs =
 			raw.end && raw.start ? raw.end.date.getTime() - raw.start.date.getTime() : 0;
 		for (const occurrence of occurrencesInWindow(raw, from, to)) {
@@ -133,22 +139,28 @@ async function fetchAgenda(days: number): Promise<AgendaEvent[]> {
 		}
 	}
 	events.sort((a, b) => a.start.localeCompare(b.start));
-	return events.slice(0, 30);
+	return events;
 }
 
 export function icsConfigured(): boolean {
 	return Boolean(env.PROTON_ICS_URL);
 }
 
-/** Cached agenda; errors degrade to an empty list (never block Home). */
-export async function getAgenda(days = 14): Promise<AgendaEvent[]> {
-	if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) return cache.events;
+/** Events within an arbitrary window (for the calendar). Errors degrade to the
+ *  last cached feed, or an empty list. */
+export async function getEventsInRange(from: Date, to: Date): Promise<AgendaEvent[]> {
 	try {
-		const events = await fetchAgenda(days);
-		cache = { fetchedAt: Date.now(), events };
-		return events;
+		return expand(await loadRawEvents(), from, to);
 	} catch (err) {
 		console.error('Proton-ICS-Feed nicht erreichbar:', err);
-		return cache?.events ?? [];
+		return cache ? expand(cache.events, from, to) : [];
 	}
+}
+
+/** Cached agenda for the Home card; from today, next `days` days. */
+export async function getAgenda(days = 14): Promise<AgendaEvent[]> {
+	const from = new Date();
+	from.setHours(0, 0, 0, 0);
+	const to = new Date(from.getTime() + days * 86_400_000);
+	return (await getEventsInRange(from, to)).slice(0, 30);
 }

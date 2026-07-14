@@ -66,21 +66,13 @@
 	<h2 class="sect">25-5 · Prioritäten</h2>
 	<div class="prio-strip">
 		{#each data.priorities as priority (priority.id)}
-			<details class="prio">
-				<summary>
-					<span class="mono rank">0{priority.rank}</span>
-					<strong>{priority.name}</strong>
-					{#if priority.note}<span class="dim small">{priority.note}</span>{/if}
-				</summary>
-				<form method="POST" action="?/updatePriority" use:enhance>
-					<input type="hidden" name="id" value={priority.id} />
-					<div class="form-row" style="margin-top:10px;">
-						<label class="field"><span>Name</span><input type="text" name="name" value={priority.name} required /></label>
-						<label class="field" style="flex:1;"><span>Notiz</span><input type="text" name="note" value={priority.note ?? ''} /></label>
-						<button class="btn ghost small">✓</button>
-					</div>
-				</form>
-			</details>
+			<a class="prio lift" href="/curriculum/priorities/{priority.id}">
+				<span class="mono rank">0{priority.rank}</span>
+				<strong>{priority.name}</strong>
+				{#if priority.note}<span class="dim small">{priority.note}</span>{/if}
+				{#if priority.description}<span class="has-desc" title="Beschreibung vorhanden">✎</span>{/if}
+				<span class="prio-arrow" aria-hidden="true">›</span>
+			</a>
 		{/each}
 	</div>
 
@@ -429,15 +421,36 @@
 		border-radius: var(--r-md);
 		background: var(--surface);
 		box-shadow: var(--shadow-sm);
-		padding: 9px 14px;
-	}
-
-	.prio summary {
-		cursor: pointer;
+		padding: 11px 14px;
 		display: flex;
 		gap: 10px;
 		align-items: baseline;
-		list-style: none;
+		text-decoration: none;
+		color: var(--ink);
+	}
+
+	.prio strong {
+		color: var(--ink);
+	}
+
+	.prio:hover strong {
+		color: var(--accent);
+	}
+
+	.prio .has-desc {
+		color: var(--accent);
+		font-size: 12px;
+	}
+
+	.prio-arrow {
+		margin-left: auto;
+		color: var(--ink3);
+		font-size: 17px;
+		align-self: center;
+	}
+
+	.prio:hover .prio-arrow {
+		color: var(--accent);
 	}
 
 	.board {

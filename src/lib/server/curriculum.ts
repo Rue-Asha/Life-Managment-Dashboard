@@ -15,6 +15,7 @@ export interface Priority25 {
 	rank: number;
 	name: string;
 	note: string | null;
+	description: string | null;
 }
 
 export interface TemplateBlock {
@@ -174,8 +175,45 @@ export function listPriorities(): Priority25[] {
 	return getDb().prepare('SELECT * FROM priorities ORDER BY rank').all() as unknown as Priority25[];
 }
 
-export function updatePriority(id: number, name: string, note: string | null): void {
-	getDb().prepare('UPDATE priorities SET name = ?, note = ? WHERE id = ?').run(name, note, id);
+export function getPriority(id: number): Priority25 | null {
+	return (getDb().prepare('SELECT * FROM priorities WHERE id = ?').get(id) ??
+		null) as Priority25 | null;
+}
+
+export function updatePriority(
+	id: number,
+	input: { name: string; note: string | null; description: string | null }
+): void {
+	getDb()
+		.prepare('UPDATE priorities SET name = ?, note = ?, description = ? WHERE id = ?')
+		.run(input.name, input.note, input.description, id);
+}
+
+/** Quotas (across all phases) tied to this priority — shown on its detail page. */
+export function listQuotasByPriority(
+	priorityId: number
+): { id: number; title: string; phase_id: number; phase_name: string; phase_status: string }[] {
+	return getDb()
+		.prepare(
+			`SELECT q.id, q.title, q.phase_id, p.name AS phase_name, p.status AS phase_status
+			 FROM quotas q JOIN phases p ON p.id = q.phase_id
+			 WHERE q.priority_id = ?
+			 ORDER BY p.status = 'archived', p.created_at DESC, q.sort_order`
+		)
+		.all(priorityId) as unknown as {
+		id: number;
+		title: string;
+		phase_id: number;
+		phase_name: string;
+		phase_status: string;
+	}[];
+}
+
+/** Mini-curricula tied to this priority — shown on its detail page. */
+export function listMiniByPriority(priorityId: number): { id: number; name: string }[] {
+	return getDb()
+		.prepare('SELECT id, name FROM mini_curricula WHERE priority_id = ? ORDER BY id')
+		.all(priorityId) as unknown as { id: number; name: string }[];
 }
 
 // ── Day templates & blocks ───────────────────────────────────────────────

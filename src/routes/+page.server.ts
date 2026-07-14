@@ -30,8 +30,8 @@ function byUrgency(a: WeekItem, b: WeekItem): number {
 }
 
 export const load: PageServerLoad = async () => {
-	const open: WeekItem[] = [
-		...listWeekOpen().map(
+	const orgaOpen: WeekItem[] = listWeekOpen()
+		.map(
 			(t): WeekItem => ({
 				source: 'alltag',
 				id: t.id,
@@ -40,8 +40,10 @@ export const load: PageServerLoad = async () => {
 				deadline: t.deadline,
 				sub: null
 			})
-		),
-		...uniListWeekOpen().map(
+		)
+		.sort(byUrgency);
+	const uniOpen: WeekItem[] = uniListWeekOpen()
+		.map(
 			(t): WeekItem => ({
 				source: 'uni',
 				id: t.id,
@@ -51,10 +53,11 @@ export const load: PageServerLoad = async () => {
 				sub: t.class_name
 			})
 		)
-	].sort(byUrgency);
+		.sort(byUrgency);
 
-	const done: WeekItem[] = [
-		...listWeekDone().map(
+	const orgaDone: WeekItem[] = listWeekDone()
+		.slice(0, 5)
+		.map(
 			(t): WeekItem => ({
 				source: 'alltag',
 				id: t.id,
@@ -63,8 +66,10 @@ export const load: PageServerLoad = async () => {
 				deadline: null,
 				sub: null
 			})
-		),
-		...uniListWeekDone().map(
+		);
+	const uniDone: WeekItem[] = uniListWeekDone()
+		.slice(0, 5)
+		.map(
 			(t): WeekItem => ({
 				source: 'uni',
 				id: t.id,
@@ -73,15 +78,17 @@ export const load: PageServerLoad = async () => {
 				deadline: null,
 				sub: t.class_name
 			})
-		)
-	].slice(0, 5);
+		);
 
 	const tasks = weekStats();
 	const uni = uniWeekStats();
 	return {
-		weekOpen: open,
-		weekDone: done,
-		stats: { done: tasks.done + uni.done, total: tasks.total + uni.total },
+		orgaOpen,
+		uniOpen,
+		orgaDone,
+		uniDone,
+		orgaStats: tasks,
+		uniStats: uni,
 		netWorthCents: netWorthNow().netWorthCents,
 		dueSoon: upcomingObligations(14).map((o) => ({
 			id: o.id,

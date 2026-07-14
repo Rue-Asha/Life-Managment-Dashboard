@@ -25,6 +25,12 @@
 		notes: ['M6 3h9l4 4v14H6z', 'M14.5 3v4.5H19', 'M9 12h6M9 16h4'],
 		projects: ['m8 8.5-4 3.5 4 3.5', 'm16 8.5 4 3.5-4 3.5', 'm13 6-2 12'],
 		curriculum: ['M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18z', 'm15.2 8.8-1.8 4.6-4.6 1.8 1.8-4.6z'],
+		calendar: [
+			'M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5z',
+			'M3.5 10h17',
+			'M8 3.5v3',
+			'M16 3.5v3'
+		],
 		search: ['M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14z', 'm20 20-3.6-3.6'],
 		review: ['M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18z', 'M12 7.5V12l3 2'],
 		capture: ['m4.5 19.5.9-3.7L16.6 4.6a2 2 0 0 1 2.8 2.8L8.2 18.6z']
@@ -34,6 +40,7 @@
 		{ href: '/', icon: 'home', label: 'Home', count: null as number | null },
 		{ href: '/tasks', icon: 'tasks', label: 'To-Do-List', count: data.weekOpen },
 		{ href: '/uni', icon: 'uni', label: 'Uni', count: data.uniWeekOpen },
+		{ href: '/calendar', icon: 'calendar', label: 'Kalender', count: null },
 		{ href: '/finance', icon: 'finance', label: 'Finanzen', count: null },
 		{ href: '/notes', icon: 'notes', label: 'Notes', count: data.inboxCount },
 		{ href: '/projects', icon: 'projects', label: 'Projects', count: null },
