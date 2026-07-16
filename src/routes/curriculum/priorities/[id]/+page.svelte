@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import Editor from '$lib/editor/Editor.svelte';
 
 	let { data, form } = $props();
 </script>
@@ -19,7 +20,7 @@
 <h2 class="sect">Details</h2>
 <div class="card">
 	<form method="POST" action="?/update" use:enhance>
-		<div class="form-row" style="margin-bottom:14px;">
+		<div class="form-row">
 			<label class="field" style="min-width:200px;">
 				<span>Name</span>
 				<input type="text" name="name" required value={data.priority.name} />
@@ -28,21 +29,18 @@
 				<span>Notiz (einzeilig)</span>
 				<input type="text" name="note" value={data.priority.note ?? ''} />
 			</label>
-		</div>
-		<label class="field" style="width:100%;">
-			<span>Beschreibung &amp; Notizen (frei)</span>
-			<textarea
-				name="description"
-				rows="10"
-				placeholder="Ziele, Warum, Ressourcen, Meilensteine, Links … alles was du zu dieser Priorität festhalten willst."
-				value={data.priority.description ?? ''}
-			></textarea>
-		</label>
-		<div style="margin-top:12px;">
 			<button class="btn">✓ Speichern</button>
 		</div>
 	</form>
 </div>
+
+<h2 class="sect">Beschreibung &amp; Notizen</h2>
+<form method="POST" action="?/saveDescription" use:enhance>
+	<Editor content={data.content} html={data.html} />
+	<div style="display:flex; justify-content:flex-end; margin-top:12px;">
+		<button class="btn">✓ Beschreibung speichern</button>
+	</div>
+</form>
 
 {#if data.quotas.length > 0}
 	<h2 class="sect">Wochenquoten mit dieser Priorität</h2>

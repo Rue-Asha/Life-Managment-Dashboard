@@ -1,4 +1,5 @@
 import { getDb } from './db';
+import { createDocumentFromText, deleteDocument } from './documents';
 import type { ClassStatus, Priority, TaskStatus, UniTaskType } from '$lib/labels';
 
 export interface Semester {
@@ -83,9 +84,13 @@ export function deleteSemester(id: number): void {
 export function listClasses(semesterId: number): Class[] {
 	return getDb()
 		.prepare(
+			// Description preview prefers the editor document (kept in sync), and
+			// falls back to the legacy column until the class is first opened.
 			`SELECT c.*,
+			   COALESCE(NULLIF(d.text_plain, ''), c.description) AS description,
 			   (SELECT COUNT(*) FROM uni_tasks ut WHERE ut.class_id = c.id AND ut.${OPEN}) AS open_tasks
 			 FROM classes c
+			 LEFT JOIN documents d ON d.id = c.document_id
 			 WHERE c.semester_id = ?
 			 ORDER BY c.status = 'completed', c.name`
 		)
@@ -162,14 +167,29 @@ export function updateClass(id: number, input: ClassInput & { status: ClassStatu
 		);
 }
 
-/** Free-text description lives in its own box on the class detail page. */
-export function updateClassDescription(id: number, description: string | null): void {
-	getDb().prepare('UPDATE classes SET description = ? WHERE id = ?').run(description, id);
+/**
+ * Return the class's document id, creating one from its legacy plain-text
+ * `description` the first time (lazy backfill). The free-text body now lives in
+ * the block editor, mirroring notes / projects / priorities.
+ */
+export function ensureClassDocument(id: number): number {
+	const cls = getDb()
+		.prepare('SELECT document_id, description FROM classes WHERE id = ?')
+		.get(id) as { document_id: number | null; description: string | null } | undefined;
+	if (!cls) throw new Error('Class nicht gefunden');
+	if (cls.document_id) return cls.document_id;
+	const documentId = createDocumentFromText(cls.description);
+	getDb().prepare('UPDATE classes SET document_id = ? WHERE id = ?').run(documentId, id);
+	return documentId;
 }
 
 /** Tasks of the class survive with class_id = NULL (ON DELETE SET NULL). */
 export function deleteClass(id: number): void {
+	const cls = getDb().prepare('SELECT document_id FROM classes WHERE id = ?').get(id) as
+		| { document_id: number | null }
+		| undefined;
 	getDb().prepare('DELETE FROM classes WHERE id = ?').run(id);
+	if (cls?.document_id) deleteDocument(cls.document_id);
 }
 
 // ── Uni tasks (mirrors tasks.ts, plus class join / type / last_revision) ─

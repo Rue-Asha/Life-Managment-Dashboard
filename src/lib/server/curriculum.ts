@@ -1,4 +1,5 @@
 import { getDb } from './db';
+import { createDocumentFromText } from './documents';
 import { isoWeekKey } from '$lib/format';
 
 export interface Phase {
@@ -16,6 +17,7 @@ export interface Priority25 {
 	name: string;
 	note: string | null;
 	description: string | null;
+	document_id: number | null;
 }
 
 export interface TemplateBlock {
@@ -172,7 +174,16 @@ export function deletePhase(id: number): void {
 // ── Priorities (25-5, global) ────────────────────────────────────────────
 
 export function listPriorities(): Priority25[] {
-	return getDb().prepare('SELECT * FROM priorities ORDER BY rank').all() as unknown as Priority25[];
+	// `description` reflects the editor document once written, falling back to the
+	// legacy column until the priority is first opened (see ensurePriorityDocument).
+	return getDb()
+		.prepare(
+			`SELECT p.*, COALESCE(NULLIF(d.text_plain, ''), p.description) AS description
+			 FROM priorities p
+			 LEFT JOIN documents d ON d.id = p.document_id
+			 ORDER BY p.rank`
+		)
+		.all() as unknown as Priority25[];
 }
 
 export function getPriority(id: number): Priority25 | null {
@@ -182,11 +193,25 @@ export function getPriority(id: number): Priority25 | null {
 
 export function updatePriority(
 	id: number,
-	input: { name: string; note: string | null; description: string | null }
+	input: { name: string; note: string | null }
 ): void {
 	getDb()
-		.prepare('UPDATE priorities SET name = ?, note = ?, description = ? WHERE id = ?')
-		.run(input.name, input.note, input.description, id);
+		.prepare('UPDATE priorities SET name = ?, note = ? WHERE id = ?')
+		.run(input.name, input.note, id);
+}
+
+/**
+ * Return the priority's document id, creating one from its legacy plain-text
+ * `description` the first time (lazy backfill). The long-form body now lives in
+ * the block editor, so the `description` column is left frozen as the seed.
+ */
+export function ensurePriorityDocument(id: number): number {
+	const priority = getPriority(id);
+	if (!priority) throw new Error('Priorität nicht gefunden');
+	if (priority.document_id) return priority.document_id;
+	const documentId = createDocumentFromText(priority.description);
+	getDb().prepare('UPDATE priorities SET document_id = ? WHERE id = ?').run(documentId, id);
+	return documentId;
 }
 
 /** Quotas (across all phases) tied to this priority — shown on its detail page. */

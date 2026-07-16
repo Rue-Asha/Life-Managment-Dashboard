@@ -27,6 +27,24 @@ export function createDocument(): number {
 	return Number(result.lastInsertRowid);
 }
 
+/**
+ * Wrap plain text into a minimal ProseMirror document — one paragraph per
+ * non-empty line. Used to lift legacy textarea fields (priority / class
+ * descriptions) into the block editor without losing their content.
+ */
+export function createDocumentFromText(text: string | null): number {
+	const paragraphs = (text ?? '')
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0)
+		.map((line) => ({ type: 'paragraph', content: [{ type: 'text', text: line }] }));
+	const doc = { type: 'doc', content: paragraphs.length ? paragraphs : [{ type: 'paragraph' }] };
+	const result = getDb()
+		.prepare('INSERT INTO documents (content, text_plain) VALUES (?, ?)')
+		.run(JSON.stringify(doc), (text ?? '').trim());
+	return Number(result.lastInsertRowid);
+}
+
 export function getDocument(id: number): Document | null {
 	return (getDb().prepare('SELECT * FROM documents WHERE id = ?').get(id) ??
 		null) as Document | null;

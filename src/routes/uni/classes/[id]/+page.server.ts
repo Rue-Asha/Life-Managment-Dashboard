@@ -3,7 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import {
 	getClass,
 	updateClass,
-	updateClassDescription,
+	ensureClassDocument,
 	deleteClass,
 	listClassTasks,
 	createUniTask,
@@ -12,6 +12,8 @@ import {
 	setUniWeek,
 	deleteUniTask
 } from '$lib/server/uni';
+import { getDocument, saveDocument, renderDocumentHtml } from '$lib/server/documents';
+import { EMPTY_DOC } from '$lib/editor/extensions';
 import {
 	action,
 	checkbox,
@@ -28,7 +30,15 @@ export const load: PageServerLoad = ({ params }) => {
 	const id = Number(params.id);
 	const cls = Number.isInteger(id) ? getClass(id) : null;
 	if (!cls) error(404, 'Class nicht gefunden');
-	return { cls, tasks: listClassTasks(cls.id) };
+	const documentId = ensureClassDocument(cls.id);
+	const doc = getDocument(documentId);
+	return {
+		cls,
+		tasks: listClassTasks(cls.id),
+		content: doc?.content ?? EMPTY_DOC,
+		html: renderDocumentHtml(doc?.content ?? EMPTY_DOC),
+		hasDescription: !!doc?.text_plain
+	};
 };
 
 export const actions: Actions = {
@@ -44,8 +54,9 @@ export const actions: Actions = {
 			status: oneOf(data, 'status', CLASS_STATUSES)
 		});
 	}),
-	updateDescription: action((event, data) => {
-		updateClassDescription(Number(event.params.id), strOrNull(data, 'description'));
+	saveDescription: action((event, data) => {
+		const documentId = ensureClassDocument(Number(event.params.id));
+		saveDocument(documentId, str(data, 'content', 'Inhalt'));
 	}),
 	delete: (event) => {
 		const cls = getClass(Number(event.params.id));

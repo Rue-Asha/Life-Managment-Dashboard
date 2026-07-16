@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import Editor from '$lib/editor/Editor.svelte';
 	import PrioritySelect from '$lib/PrioritySelect.svelte';
 	import { formatDate, formatDeadline, daysUntil } from '$lib/format';
 	import {
@@ -136,24 +137,14 @@
 	</div>
 </details>
 
-<details class="sec" open={!!data.cls.description}>
+<details class="sec" open={data.hasDescription}>
 	<summary>Beschreibung</summary>
-	<div class="card">
-		<form method="POST" action="?/updateDescription" use:enhance>
-			<label class="field" style="width:100%;">
-				<span>Weitere Infos &amp; Notizen zu dieser Class</span>
-				<textarea
-					name="description"
-					rows="5"
-					placeholder="Inhalte, Prüfungsform, wichtige Links, Sprechstunden …"
-					value={data.cls.description ?? ''}
-				></textarea>
-			</label>
-			<div style="margin-top:12px;">
-				<button class="btn">✓ Beschreibung speichern</button>
-			</div>
-		</form>
-	</div>
+	<form method="POST" action="?/saveDescription" use:enhance>
+		<Editor content={data.content} html={data.html} />
+		<div style="display:flex; justify-content:flex-end; margin-top:12px;">
+			<button class="btn">✓ Beschreibung speichern</button>
+		</div>
+	</form>
 </details>
 
 <details class="sec" open>
