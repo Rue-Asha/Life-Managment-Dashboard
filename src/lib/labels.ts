@@ -1,112 +1,71 @@
-// Shared enum labels (client + server). E-Ink rule: state is always
-// symbol + word — these strings are the single source for that language.
+/** Zentrale Domänen-Konstanten des Redesigns (Artifact = Single Source of Truth).
+ *  Farben sind Teil des Datenmodells (Kurs-Hues, Kategorie-Farben) und werden
+ *  deshalb hier statt in CSS gepflegt. */
 
-export const AREAS = ['uni', 'job', 'it', 'personal'] as const;
-export type Area = (typeof AREAS)[number];
-
-export const AREA_LABELS: Record<Area, string> = {
-	uni: 'Uni (Orga)',
-	job: 'Job',
-	it: 'IT',
-	personal: 'Personal'
+export const CATS = ['personal', 'uni', 'job'] as const;
+export type Cat = (typeof CATS)[number];
+export const CAT_META: Record<Cat, { label: string; color: string }> = {
+	personal: { label: 'Persönlich', color: '#C79CBA' },
+	uni: { label: 'Uni', color: '#9FBF9A' },
+	job: { label: 'Job', color: '#7FA3C4' }
 };
 
-export const PRIORITIES = ['high', 'medium', 'low'] as const;
-export type Priority = (typeof PRIORITIES)[number];
-
-export const PRIORITY_LABELS: Record<Priority, { label: string; tone: 'crit' | 'warn' | 'good' }> =
-	{
-		high: { label: '▲ Hoch', tone: 'crit' },
-		medium: { label: '■ Mittel', tone: 'warn' },
-		low: { label: '▽ Niedrig', tone: 'good' }
-	};
-
-export const TASK_STATUSES = ['backlog', 'todo', 'in_progress', 'wont_do', 'done'] as const;
-export type TaskStatus = (typeof TASK_STATUSES)[number];
-
-export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
-	backlog: '○ Backlog',
-	todo: '○ To-do',
-	in_progress: '◐ In Arbeit',
-	wont_do: '✕ Won’t do',
-	done: '✓ Done'
+export const STATUSES = ['todo', 'doing', 'done'] as const;
+export type Status = (typeof STATUSES)[number];
+export const STATUS_LABEL: Record<Status, string> = {
+	todo: 'OFFEN',
+	doing: 'IN ARBEIT',
+	done: 'ERLEDIGT'
 };
 
-// Uni (brick 3) — task types mirror the Notion "Type" select.
-export const UNI_TASK_TYPES = ['exc', 'vl', 'qz', 'ch'] as const;
-export type UniTaskType = (typeof UNI_TASK_TYPES)[number];
-
-export const UNI_TASK_TYPE_LABELS: Record<UniTaskType, string> = {
-	exc: 'EXC · Übung',
-	vl: 'VL · Vorlesung',
-	qz: 'QZ · Quiz',
-	ch: 'CH · Kapitel'
-};
-
-// Notes (brick 5) — Bereiche mirror the Notion Private-Notes sections.
-export const BEREICHE = [
-	'persoenlich',
-	'ideen',
-	'gesundheit',
-	'reise',
-	'orte_food',
-	'musik_medien'
-] as const;
-export type Bereich = (typeof BEREICHE)[number];
-
-export const BEREICH_LABELS: Record<Bereich, string> = {
-	persoenlich: 'Persönlich',
-	ideen: 'Ideen',
-	gesundheit: 'Gesundheit',
-	reise: 'Reise',
-	orte_food: 'Orte & Food',
-	musik_medien: 'Musik & Medien'
-};
-
-// Curriculum (brick 7)
-export const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'] as const;
-
-// Projects (brick 6)
-export const PROJECT_TYPES = ['project', 'course', 'tutorial', 'research', 'other'] as const;
-export type ProjectType = (typeof PROJECT_TYPES)[number];
-
-export const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
-	project: 'Projekt',
-	course: 'Kurs',
-	tutorial: 'Tutorial',
-	research: 'Research',
-	other: 'Sonstiges'
-};
-
-export const PROJECT_STATUSES = ['backlog', 'in_progress', 'done', 'paused', 'archived'] as const;
-export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
-
-export const PROJECT_STATUS_LABELS: Record<ProjectStatus, { label: string; tone: string }> = {
-	backlog: { label: '○ Backlog', tone: '' },
-	in_progress: { label: '◐ In Progress', tone: 'good' },
-	done: { label: '✓ Done', tone: 'good' },
-	paused: { label: '❚❚ Paused', tone: 'warn' },
-	archived: { label: '▣ Archiviert', tone: '' }
-};
-
-export const PROJECT_VIEWS = ['grid', 'list', 'board'] as const;
-export type ProjectView = (typeof PROJECT_VIEWS)[number];
-
-/** Notes tags live as a JSON array in TEXT; tolerate malformed data. */
-export function parseTags(raw: string): string[] {
-	try {
-		const parsed = JSON.parse(raw);
-		return Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === 'string') : [];
-	} catch {
-		return [];
-	}
+export const PRIOS = [1, 2, 3] as const;
+export type Prio = (typeof PRIOS)[number];
+export function prioLabel(p: number): string {
+	return p === 1 ? 'P1 HOCH' : p === 2 ? 'P2 MITTEL' : 'P3 NIEDRIG';
+}
+export function prioColor(p: number): string {
+	return p === 1 ? '#C58C86' : p === 2 ? '#CFA76E' : '#3A3233';
 }
 
-export const CLASS_STATUSES = ['active', 'completed', 'on_hold'] as const;
-export type ClassStatus = (typeof CLASS_STATUSES)[number];
+export const UNI_TYPES = ['VL', 'EXC', 'OTH'] as const;
+export type UniType = (typeof UNI_TYPES)[number];
+export function typeColor(t: string): string {
+	return t === 'VL' ? '#7FA3C4' : t === 'EXC' ? '#CFA76E' : '#8E8480';
+}
 
-export const CLASS_STATUS_LABELS: Record<ClassStatus, { label: string; tone: string }> = {
-	active: { label: '● Aktiv', tone: 'good' },
-	completed: { label: '✓ Abgeschlossen', tone: '' },
-	on_hold: { label: '◐ On Hold', tone: 'warn' }
+export const COURSE_HUES = [
+	'#C79CBA',
+	'#7FA3C4',
+	'#9FBF9A',
+	'#CFA76E',
+	'#C58C86',
+	'#A99AD0',
+	'#8FBFB6'
+] as const;
+export function courseColor(hue: number | null | undefined): string {
+	return COURSE_HUES[Math.abs(hue ?? 0) % COURSE_HUES.length];
+}
+
+export const PROJECT_STATUSES = ['backlog', 'paused', 'active', 'archived'] as const;
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
+export const PROJECT_STATUS_META: Record<ProjectStatus, { label: string; color: string }> = {
+	backlog: { label: 'BACKLOG', color: '#8E8480' },
+	paused: { label: 'PAUSIERT', color: '#CFA76E' },
+	active: { label: 'AKTIV', color: '#C79CBA' },
+	archived: { label: 'ARCHIV', color: '#5E5654' }
 };
+
+export const NOTE_KINDS = ['journal', 'scratch', 'ref'] as const;
+export type NoteKind = (typeof NOTE_KINDS)[number];
+export const NOTE_KIND_LABEL: Record<NoteKind, string> = {
+	journal: 'JOURNAL',
+	scratch: 'SCRATCH',
+	ref: 'REFERENZ'
+};
+
+/** Ordner-Akzentfarben; Index stabil über die Sortierreihenfolge, Inbox grau. */
+export const FOLDER_HUES = ['#C79CBA', '#7FA3C4', '#9FBF9A', '#CFA76E', '#C58C86'] as const;
+export function folderColor(index: number): string {
+	return FOLDER_HUES[index % FOLDER_HUES.length];
+}
+export const INBOX_COLOR = '#6B6462';

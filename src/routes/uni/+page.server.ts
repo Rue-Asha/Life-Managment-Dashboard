@@ -1,90 +1,86 @@
 import type { Actions, PageServerLoad } from './$types';
 import {
-	listSemesters,
+	clearSession,
+	createCourse,
 	createSemester,
-	setSemesterStatus,
-	deleteSemester,
-	listClasses,
-	listAllClasses,
-	createClass,
-	uniListWeekOpen,
-	uniListWeekDone,
-	uniWeekStats,
 	createUniTask,
-	toggleUniDone,
-	setUniWeek,
-	deleteUniTask
+	cycleUniType,
+	deleteSemester,
+	deleteUniTask,
+	listCourses,
+	listSemesters,
+	listSession,
+	listUniTasks,
+	sweepSession,
+	toggleSemesterArchived,
+	toggleSession,
+	toggleUniDone
 } from '$lib/server/uni';
-import {
-	action,
-	checkbox,
-	int,
-	intOrNull,
-	numOrNull,
-	oneOf,
-	oneOfOrNull,
-	str,
-	strOrNull
-} from '$lib/server/forms';
-import { PRIORITIES, UNI_TASK_TYPES } from '$lib/labels';
+import { action, int, oneOf, str, strOrNull } from '$lib/server/forms';
+import { UNI_TYPES } from '$lib/labels';
+import { todayISO } from '$lib/format';
+
+const VIEWS = ['courses', 'tasks', 'session'] as const;
 
 export const load: PageServerLoad = ({ url }) => {
+	const rawView = url.searchParams.get('view');
 	const semesters = listSemesters();
-	const requested = Number(url.searchParams.get('semester'));
-	const selected =
-		semesters.find((s) => s.id === requested) ??
-		semesters.find((s) => s.status === 'active') ??
-		semesters[0] ??
-		null;
+	const rawSem = Number(url.searchParams.get('sem'));
+	const fallback = [...semesters].reverse().find((s) => s.status === 'active') ?? semesters.at(-1);
+	const sem = semesters.find((s) => s.id === rawSem) ?? fallback ?? null;
+	const rawCourse = url.searchParams.get('course');
+
 	return {
+		view: VIEWS.includes(rawView as (typeof VIEWS)[number]) ? rawView : 'courses',
 		semesters,
-		selected: selected?.id ?? null,
-		classes: selected ? listClasses(selected.id) : [],
-		allClasses: listAllClasses(),
-		weekOpen: uniListWeekOpen(),
-		weekDone: uniListWeekDone(),
-		stats: uniWeekStats()
+		semId: sem?.id ?? null,
+		showArchived: url.searchParams.get('archiv') === '1',
+		courseFilter: rawCourse && rawCourse !== 'all' ? Number(rawCourse) : null,
+		courses: listCourses(),
+		uniTasks: listUniTasks(),
+		session: listSession(),
+		today: todayISO()
 	};
 };
 
 export const actions: Actions = {
-	createSemester: action((_event, data) => {
-		createSemester(str(data, 'name', 'Name'));
+	addSemester: action((_e, data) => {
+		createSemester(str(data, 'name', 'Semester'));
 	}),
-	semesterStatus: action((_event, data) => {
-		setSemesterStatus(int(data, 'id'), oneOf(data, 'status', ['active', 'archived'] as const));
+	archiveSemester: action((_e, data) => {
+		toggleSemesterArchived(int(data, 'id'));
 	}),
-	deleteSemester: action((_event, data) => {
+	deleteSemester: action((_e, data) => {
 		deleteSemester(int(data, 'id'));
 	}),
-	createClass: action((_event, data) => {
-		createClass(int(data, 'semester_id'), {
-			name: str(data, 'name', 'Name'),
-			professor: strOrNull(data, 'professor'),
-			room: strOrNull(data, 'room'),
-			schedule: strOrNull(data, 'schedule'),
-			cps: numOrNull(data, 'cps', 'CPs'),
-			examDate: strOrNull(data, 'exam_date'),
-			archiveUrl: strOrNull(data, 'archive_url')
-		});
+	addCourse: action((_e, data) => {
+		createCourse(int(data, 'sem'), str(data, 'name', 'Kurs'), strOrNull(data, 'code') ?? '');
 	}),
-	createTask: action((_event, data) => {
+	addTask: action((_e, data) => {
 		createUniTask({
-			title: str(data, 'title', 'Titel'),
-			classId: intOrNull(data, 'class_id'),
-			taskType: oneOfOrNull(data, 'task_type', UNI_TASK_TYPES),
-			priority: oneOfOrNull(data, 'priority', PRIORITIES),
-			deadline: strOrNull(data, 'deadline'),
-			thisWeek: checkbox(data, 'this_week')
+			courseId: int(data, 'course'),
+			text: str(data, 'text', 'Aufgabe'),
+			due: strOrNull(data, 'due'),
+			prio: int(data, 'prio'),
+			type: oneOf(data, 'type', UNI_TYPES)
 		});
 	}),
-	toggle: action((_event, data) => {
+	toggle: action((_e, data) => {
 		toggleUniDone(int(data, 'id'));
 	}),
-	week: action((_event, data) => {
-		setUniWeek(int(data, 'id'), data.get('on') === '1');
+	type: action((_e, data) => {
+		cycleUniType(int(data, 'id'));
 	}),
-	delete: action((_event, data) => {
+	delete: action((_e, data) => {
 		deleteUniTask(int(data, 'id'));
+	}),
+	session: action((_e, data) => {
+		toggleSession(int(data, 'id'), todayISO());
+	}),
+	clearSession: action(() => {
+		clearSession();
+	}),
+	sweepSession: action(() => {
+		sweepSession();
 	})
 };

@@ -1,94 +1,73 @@
 import { getDb } from './db';
-import { createDocument, deleteDocument } from './documents';
-import type { Bereich } from '$lib/labels';
+import type { NoteKind } from '$lib/labels';
+
+export interface NoteFolder {
+	id: number;
+	name: string;
+}
 
 export interface Note {
 	id: number;
+	folder_id: number | null;
 	title: string;
-	bereich: Bereich | null;
-	tags: string; // JSON array of strings
-	inbox: number;
-	document_id: number | null;
+	kind: NoteKind;
+	body: string;
 	created_at: string;
 	updated_at: string;
-	snippet: string;
 }
 
-const WITH_SNIPPET = `SELECT n.*, COALESCE(substr(d.text_plain, 1, 160), '') AS snippet
-	 FROM notes n LEFT JOIN documents d ON d.id = n.document_id`;
-
-export function listInbox(): Note[] {
+export function listFolders(): NoteFolder[] {
 	return getDb()
-		.prepare(`${WITH_SNIPPET} WHERE n.inbox = 1 ORDER BY n.created_at DESC`)
+		.prepare('SELECT id, name FROM note_folders ORDER BY id')
+		.all() as unknown as NoteFolder[];
+}
+
+export function createFolder(name: string): number {
+	const res = getDb().prepare('INSERT INTO note_folders (name) VALUES (?)').run(name);
+	return Number(res.lastInsertRowid);
+}
+
+export function renameFolder(id: number, name: string): void {
+	getDb().prepare('UPDATE note_folders SET name = ? WHERE id = ?').run(name, id);
+}
+
+/** Ordner löschen; enthaltene Notizen wandern nach „Ohne Ordner" (folder_id NULL). */
+export function deleteFolder(id: number): void {
+	getDb().prepare('DELETE FROM note_folders WHERE id = ?').run(id);
+}
+
+export function listNotes(): Note[] {
+	return getDb()
+		.prepare('SELECT * FROM notes ORDER BY updated_at DESC, id DESC')
 		.all() as unknown as Note[];
 }
 
-export function inboxCount(): number {
-	const row = getDb().prepare('SELECT COUNT(*) AS n FROM notes WHERE inbox = 1').get() as {
-		n: number;
-	};
-	return row.n;
+export function getNote(id: number): Note | null {
+	return (getDb().prepare('SELECT * FROM notes WHERE id = ?').get(id) as unknown as Note) ?? null;
 }
 
-/** Filed notes (not inbox), optionally one Bereich, freshest first. */
-export function listNotes(bereich?: Bereich): Note[] {
-	const where = bereich ? 'AND n.bereich = ?' : '';
-	return getDb()
-		.prepare(`${WITH_SNIPPET} WHERE n.inbox = 0 ${where} ORDER BY n.updated_at DESC`)
-		.all(...(bereich ? [bereich] : [])) as unknown as Note[];
+export function createNote(input: {
+	title: string;
+	body?: string;
+	kind?: NoteKind;
+	folderId?: number | null;
+}): number {
+	const res = getDb()
+		.prepare(`INSERT INTO notes (title, body, kind, folder_id) VALUES (?, ?, ?, ?)`)
+		.run(input.title, input.body ?? '', input.kind ?? 'journal', input.folderId ?? null);
+	return Number(res.lastInsertRowid);
 }
 
-export function bereichCounts(): Record<string, number> {
-	const rows = getDb()
-		.prepare(
-			`SELECT bereich, COUNT(*) AS n FROM notes WHERE inbox = 0 AND bereich IS NOT NULL GROUP BY bereich`
-		)
-		.all() as unknown as { bereich: string; n: number }[];
-	return Object.fromEntries(rows.map((r) => [r.bereich, r.n]));
-}
-
-/** Quick capture: title only. Without a Bereich it lands in the inbox; with
- *  one it is filed straight into that Bereich (inbox = 0), skipping the inbox. */
-export function createNote(title: string, bereich: Bereich | null = null): number {
-	const documentId = createDocument();
-	const result = getDb()
-		.prepare('INSERT INTO notes (title, bereich, inbox, document_id) VALUES (?, ?, ?, ?)')
-		.run(title, bereich, bereich ? 0 : 1, documentId);
-	return Number(result.lastInsertRowid);
-}
-
-export function getNote(id: number): (Note & { content: string }) | null {
-	return (getDb()
-		.prepare(
-			`SELECT n.*, COALESCE(d.text_plain, '') AS snippet,
-			        COALESCE(d.content, '{"type":"doc","content":[{"type":"paragraph"}]}') AS content
-			 FROM notes n LEFT JOIN documents d ON d.id = n.document_id
-			 WHERE n.id = ?`
-		)
-		.get(id) ?? null) as (Note & { content: string }) | null;
-}
-
-/** Filing a Bereich moves the note out of the inbox (the Sunday-review verb). */
-export function updateNoteMeta(
+export function updateNoteField(
 	id: number,
-	input: { title: string; bereich: Bereich | null; tags: string[] }
+	field: 'title' | 'body' | 'kind' | 'folder_id',
+	value: string | number | null
 ): void {
 	getDb()
-		.prepare(
-			`UPDATE notes SET title = ?, bereich = ?, tags = ?,
-			   inbox = CASE WHEN ? IS NULL THEN inbox ELSE 0 END,
-			   updated_at = datetime('now')
-			 WHERE id = ?`
-		)
-		.run(input.title, input.bereich, JSON.stringify(input.tags), input.bereich, id);
-}
-
-export function touchNote(id: number): void {
-	getDb().prepare(`UPDATE notes SET updated_at = datetime('now') WHERE id = ?`).run(id);
+		.prepare(`UPDATE notes SET ${field} = ?, updated_at = datetime('now') WHERE id = ?`)
+		.run(value, id);
 }
 
 export function deleteNote(id: number): void {
-	const note = getNote(id);
 	getDb().prepare('DELETE FROM notes WHERE id = ?').run(id);
-	if (note?.document_id) deleteDocument(note.document_id);
 }

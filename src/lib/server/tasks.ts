@@ -1,128 +1,100 @@
 import { getDb } from './db';
-import type { Area, Priority, TaskStatus } from '$lib/labels';
+import type { Cat, Status } from '$lib/labels';
 
 export interface Task {
 	id: number;
-	title: string;
-	area: Area;
-	status: TaskStatus;
-	priority: Priority | null;
-	deadline: string | null;
-	this_week: number;
+	text: string;
+	cat: Cat;
+	prio: number;
+	status: Status;
+	due: string | null;
+	notes: string;
+	done: number;
 	created_at: string;
 	completed_at: string | null;
 }
 
-const OPEN = `status NOT IN ('done', 'wont_do')`;
-const PRIO_ORDER = `CASE priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 WHEN 'low' THEN 2 ELSE 3 END`;
-const SORT = `${PRIO_ORDER}, deadline IS NULL, deadline, created_at`;
-
-/** Open tasks marked for this week, most urgent first. */
-export function listWeekOpen(area?: Area): Task[] {
-	const where = area ? 'AND area = ?' : '';
+export function listTasks(): Task[] {
 	return getDb()
-		.prepare(`SELECT * FROM tasks WHERE this_week = 1 AND ${OPEN} ${where} ORDER BY ${SORT}`)
-		.all(...(area ? [area] : [])) as unknown as Task[];
+		.prepare(`SELECT * FROM tasks ORDER BY prio, due IS NULL, due, created_at DESC`)
+		.all() as unknown as Task[];
 }
 
-/** Done tasks stay visible for 7 days (spec §4.2), newest first. */
-export function listWeekDone(area?: Area): Task[] {
-	const where = area ? 'AND area = ?' : '';
-	return getDb()
-		.prepare(
-			`SELECT * FROM tasks
-			 WHERE this_week = 1 AND status = 'done'
-			   AND completed_at >= datetime('now', '-7 days') ${where}
-			 ORDER BY completed_at DESC`
-		)
-		.all(...(area ? [area] : [])) as unknown as Task[];
+export function getTask(id: number): Task | null {
+	return (getDb().prepare('SELECT * FROM tasks WHERE id = ?').get(id) as unknown as Task) ?? null;
 }
 
-/** Open tasks not scheduled for this week. */
-export function listBacklog(area?: Area): Task[] {
-	const where = area ? 'AND area = ?' : '';
-	return getDb()
-		.prepare(`SELECT * FROM tasks WHERE this_week = 0 AND ${OPEN} ${where} ORDER BY ${SORT}`)
-		.all(...(area ? [area] : [])) as unknown as Task[];
-}
-
-export function weekStats(): { done: number; total: number } {
-	const row = getDb()
-		.prepare(
-			`SELECT
-			   SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) AS done,
-			   COUNT(*) AS total
-			 FROM tasks
-			 WHERE this_week = 1 AND status != 'wont_do'
-			   AND (completed_at IS NULL OR completed_at >= datetime('now', '-7 days'))`
-		)
-		.get() as { done: number | null; total: number };
-	return { done: row.done ?? 0, total: row.total };
-}
-
-export function countWeekOpen(): number {
-	const row = getDb()
-		.prepare(`SELECT COUNT(*) AS n FROM tasks WHERE this_week = 1 AND ${OPEN}`)
-		.get() as { n: number };
+export function countOpen(): number {
+	const row = getDb().prepare(`SELECT COUNT(*) AS n FROM tasks WHERE done = 0`).get() as {
+		n: number;
+	};
 	return row.n;
 }
 
-export function createTask(input: {
-	title: string;
-	area: Area;
-	priority: Priority | null;
-	deadline: string | null;
-	thisWeek: number;
-}): void {
+export function createTask(input: { text: string; cat: Cat; prio: number; due: string | null }): void {
 	getDb()
-		.prepare(
-			`INSERT INTO tasks (title, area, priority, deadline, this_week, status)
-			 VALUES (?, ?, ?, ?, ?, ?)`
-		)
-		.run(
-			input.title,
-			input.area,
-			input.priority,
-			input.deadline,
-			input.thisWeek,
-			input.thisWeek ? 'todo' : 'backlog'
-		);
+		.prepare(`INSERT INTO tasks (text, cat, prio, due) VALUES (?, ?, ?, ?)`)
+		.run(input.text, input.cat, input.prio, input.due);
 }
 
-/** Edit an existing task's core fields (title, area, priority, deadline). */
-export function updateTask(
+/** Ein Feld einer Aufgabe ändern (Detailseite: Auto-Save pro Feld). */
+export function updateTaskField(
 	id: number,
-	input: { title: string; area: Area; priority: Priority | null; deadline: string | null }
+	field: 'text' | 'cat' | 'prio' | 'status' | 'due' | 'notes',
+	value: string | number | null
 ): void {
-	getDb()
-		.prepare(`UPDATE tasks SET title = ?, area = ?, priority = ?, deadline = ? WHERE id = ?`)
-		.run(input.title, input.area, input.priority, input.deadline, id);
+	getDb().prepare(`UPDATE tasks SET ${field} = ? WHERE id = ?`).run(value, id);
+	if (field === 'status') {
+		getDb()
+			.prepare(
+				`UPDATE tasks SET done = CASE WHEN status = 'done' THEN 1 ELSE 0 END,
+				 completed_at = CASE WHEN status = 'done' THEN datetime('now') ELSE NULL END
+				 WHERE id = ?`
+			)
+			.run(id);
+	}
 }
 
-/** Check off / un-check a task. */
 export function toggleDone(id: number): void {
 	getDb()
 		.prepare(
 			`UPDATE tasks SET
-			   status = CASE WHEN status = 'done' THEN 'todo' ELSE 'done' END,
-			   completed_at = CASE WHEN status = 'done' THEN NULL ELSE datetime('now') END
+			   done = CASE WHEN done = 1 THEN 0 ELSE 1 END,
+			   status = CASE WHEN done = 1 THEN 'todo' ELSE 'done' END,
+			   completed_at = CASE WHEN done = 1 THEN NULL ELSE datetime('now') END
 			 WHERE id = ?`
 		)
 		.run(id);
 }
 
-/** Move between backlog and this week (the Sunday-review verb). */
-export function setWeek(id: number, on: boolean): void {
+/** Board-Pfeil: offen → in Arbeit → erledigt → offen. */
+export function advanceStatus(id: number): void {
 	getDb()
 		.prepare(
 			`UPDATE tasks SET
-			   this_week = ?,
-			   status = CASE WHEN status = 'backlog' AND ? = 1 THEN 'todo'
-			                 WHEN status = 'todo' AND ? = 0 THEN 'backlog'
-			                 ELSE status END
+			   status = CASE status WHEN 'todo' THEN 'doing' WHEN 'doing' THEN 'done' ELSE 'todo' END,
+			   done = CASE status WHEN 'doing' THEN 1 ELSE 0 END,
+			   completed_at = CASE status WHEN 'doing' THEN datetime('now') ELSE NULL END
 			 WHERE id = ?`
 		)
-		.run(on ? 1 : 0, on ? 1 : 0, on ? 1 : 0, id);
+		.run(id);
+}
+
+/** Prio-Balken klick: 3 → 1 → 2 → 3 zyklisch (wie im Design: p===3?1:p+1). */
+export function cyclePrio(id: number): void {
+	getDb()
+		.prepare(`UPDATE tasks SET prio = CASE WHEN prio = 3 THEN 1 ELSE prio + 1 END WHERE id = ?`)
+		.run(id);
+}
+
+/** Kategorie-Badge klick: personal → uni → job → personal. */
+export function cycleCat(id: number): void {
+	getDb()
+		.prepare(
+			`UPDATE tasks SET cat = CASE cat WHEN 'personal' THEN 'uni' WHEN 'uni' THEN 'job' ELSE 'personal' END
+			 WHERE id = ?`
+		)
+		.run(id);
 }
 
 export function deleteTask(id: number): void {

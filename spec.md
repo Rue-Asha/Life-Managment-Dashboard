@@ -1,3 +1,8 @@
+> **⚠ Historisch (Stand vor 08/2026):** Diese Spec beschreibt die alte
+> „Zentrale“. Seit dem Redesign ist das Design-Artifact „Management
+> Dashboard Design“ die Single Source of Truth (siehe README) —
+> Finanzen, Curriculum, Review, Suche und Kalender sind entfernt.
+
 # Build-Spec: Life Management Dashboard („Zentrale")
 
 > Design & scaffold spec for the self-hosted personal hub that replaces Notion,

@@ -1,53 +1,52 @@
 import type { Actions, PageServerLoad } from './$types';
 import {
-	listWeekOpen,
-	listWeekDone,
-	listBacklog,
-	weekStats,
+	advanceStatus,
 	createTask,
-	updateTask,
+	cycleCat,
+	cyclePrio,
+	deleteTask,
+	listTasks,
 	toggleDone,
-	setWeek,
-	deleteTask
+	updateTaskField
 } from '$lib/server/tasks';
-import { action, checkbox, int, oneOf, oneOfOrNull, str, strOrNull } from '$lib/server/forms';
-import { AREAS, PRIORITIES, type Area } from '$lib/labels';
+import { action, int, oneOf, strOrNull, str } from '$lib/server/forms';
+import { CATS } from '$lib/labels';
+
+const VIEWS = ['day', 'week', 'board', 'all'] as const;
 
 export const load: PageServerLoad = ({ url }) => {
-	const raw = url.searchParams.get('area');
-	const area = AREAS.includes(raw as Area) ? (raw as Area) : undefined;
+	const rawView = url.searchParams.get('view');
+	const rawCat = url.searchParams.get('cat');
 	return {
-		area: area ?? null,
-		weekOpen: listWeekOpen(area),
-		weekDone: listWeekDone(area),
-		backlog: listBacklog(area),
-		stats: weekStats()
+		view: VIEWS.includes(rawView as (typeof VIEWS)[number]) ? rawView : 'day',
+		cat: CATS.includes(rawCat as (typeof CATS)[number]) ? rawCat : 'all',
+		tasks: listTasks()
 	};
 };
 
 export const actions: Actions = {
 	create: action((_event, data) => {
 		createTask({
-			title: str(data, 'title', 'Titel'),
-			area: oneOf(data, 'area', AREAS),
-			priority: oneOfOrNull(data, 'priority', PRIORITIES),
-			deadline: strOrNull(data, 'deadline'),
-			thisWeek: checkbox(data, 'this_week')
-		});
-	}),
-	update: action((_event, data) => {
-		updateTask(int(data, 'id'), {
-			title: str(data, 'title', 'Titel'),
-			area: oneOf(data, 'area', AREAS),
-			priority: oneOfOrNull(data, 'priority', PRIORITIES),
-			deadline: strOrNull(data, 'deadline')
+			text: str(data, 'text', 'Aufgabe'),
+			cat: oneOf(data, 'cat', CATS),
+			prio: int(data, 'prio'),
+			due: strOrNull(data, 'due')
 		});
 	}),
 	toggle: action((_event, data) => {
 		toggleDone(int(data, 'id'));
 	}),
-	week: action((_event, data) => {
-		setWeek(int(data, 'id'), data.get('on') === '1');
+	advance: action((_event, data) => {
+		advanceStatus(int(data, 'id'));
+	}),
+	prio: action((_event, data) => {
+		cyclePrio(int(data, 'id'));
+	}),
+	cat: action((_event, data) => {
+		cycleCat(int(data, 'id'));
+	}),
+	due: action((_event, data) => {
+		updateTaskField(int(data, 'id'), 'due', strOrNull(data, 'due'));
 	}),
 	delete: action((_event, data) => {
 		deleteTask(int(data, 'id'));

@@ -1,99 +1,128 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import Editor from '$lib/editor/Editor.svelte';
-	import PrioritySelect from '$lib/PrioritySelect.svelte';
-	import {
-		PROJECT_STATUSES,
-		PROJECT_STATUS_LABELS,
-		PROJECT_TYPES,
-		PROJECT_TYPE_LABELS
-	} from '$lib/labels';
+	import { autosave, quietEnhance } from '$lib/autosave';
+	import { PROJECT_STATUSES, PROJECT_STATUS_META } from '$lib/labels';
 
-	let { data, form } = $props();
+	let { data } = $props();
+	const p = $derived(data.project);
+	const statusColor = $derived(PROJECT_STATUS_META[p.status].color);
+	const done = $derived(data.tasks.filter((t) => t.done).length);
+	const pct = $derived(data.tasks.length ? Math.round((done / data.tasks.length) * 100) : 0);
 
-	function confirmDelete(event: SubmitEvent) {
-		if (!confirm(`Projekt „${data.project.name}“ löschen?`)) event.preventDefault();
-	}
+	let stepInput = $state('');
 </script>
 
-<svelte:head><title>{data.project.name} · Zentrale</title></svelte:head>
-
-<div class="page-head">
-	<div>
-		<p class="eyebrow"><a href="/projects">Projects</a></p>
-		<h1>{data.project.name}</h1>
-		<p class="lede" style="margin-bottom:0;">
-			<span class="badge {PROJECT_STATUS_LABELS[data.project.status].tone}"
-				>{PROJECT_STATUS_LABELS[data.project.status].label}</span
-			>
-			<span class="chip">{PROJECT_TYPE_LABELS[data.project.type]}</span>
-			{#if data.project.link}
-				<a class="fchip" href={data.project.link} target="_blank" rel="noreferrer">↗ Link</a>
-			{/if}
-		</p>
-	</div>
-	<div class="actions">
-		<form class="inline" method="POST" action="?/delete" onsubmit={confirmDelete}>
-			<button class="btn ghost">✕ Löschen</button>
-		</form>
-	</div>
-</div>
-
-{#if form?.message}<p class="form-error">{form.message}</p>{/if}
-
-<div class="card" style="margin-bottom:18px;">
-	<form method="POST" action="?/meta" use:enhance>
-		<div class="form-row">
-			<label class="field" style="flex:1; min-width:180px;">
-				<span>Name</span>
-				<input type="text" name="name" required value={data.project.name} />
-			</label>
-			<label class="field">
-				<span>Typ</span>
-				<select name="type">
-					{#each PROJECT_TYPES as type (type)}
-						<option value={type} selected={data.project.type === type}
-							>{PROJECT_TYPE_LABELS[type]}</option
-						>
-					{/each}
-				</select>
-			</label>
-			<label class="field">
-				<span>Status</span>
-				<select name="status">
-					{#each PROJECT_STATUSES as status (status)}
-						<option value={status} selected={data.project.status === status}
-							>{PROJECT_STATUS_LABELS[status].label}</option
-						>
-					{/each}
-				</select>
-			</label>
-			<PrioritySelect value={data.project.priority} />
-			<label class="field" style="min-width:170px;">
-				<span>Tech-Stack</span>
-				<input type="text" name="tech_stack" value={data.project.tech_stack ?? ''} />
-			</label>
-			<label class="field" style="min-width:170px;">
-				<span>Link</span>
-				<input type="text" name="link" value={data.project.link ?? ''} />
-			</label>
-			<label class="field">
-				<span>Start</span>
-				<input type="date" name="start_date" value={data.project.start_date ?? ''} />
-			</label>
-			<label class="field" style="flex:1; min-width:200px;">
-				<span>Beschreibung</span>
-				<input type="text" name="description" value={data.project.description ?? ''} />
-			</label>
-			<button class="btn ghost">✓ Speichern</button>
-		</div>
+<div class="detail-bar">
+	<a class="btn-back" href="/projects">← ALLE PROJEKTE</a>
+	<span class="mono-dim" style="letter-spacing:0.18em">STATUS</span>
+	<form method="POST" action="?/status" use:quietEnhance style="display:contents">
+		<select
+			name="status"
+			value={p.status}
+			use:autosave
+			style="background:var(--panel2);border:1px solid {statusColor};color:{statusColor};font-family:var(--font-mono);font-size:9px;letter-spacing:0.16em;padding:7px 11px;border-radius:2px;cursor:pointer"
+		>
+			{#each PROJECT_STATUSES as s (s)}
+				<option value={s}>{PROJECT_STATUS_META[s].label}</option>
+			{/each}
+		</select>
+	</form>
+	<form class="spacer" method="POST" action="?/delete" use:enhance>
+		<button class="btn-text">projekt löschen</button>
 	</form>
 </div>
 
-<h2 class="sect">Projekt-Doku</h2>
-<form method="POST" action="?/save" use:enhance>
-	<Editor content={data.project.content} html={data.html} />
-	<div style="display:flex; justify-content:flex-end; margin-top:12px;">
-		<button class="btn">✓ Inhalt speichern</button>
-	</div>
-</form>
+<div class="detail-grid">
+	<section class="panel">
+		<div class="panel-label">[ ECKDATEN ]</div>
+		<div class="fields">
+			<form method="POST" action="?/name" use:quietEnhance>
+				<label class="field">
+					<span>NAME</span>
+					<input class="title-input" name="name" value={p.name} use:autosave />
+				</label>
+			</form>
+			<form method="POST" action="?/stack" use:quietEnhance>
+				<label class="field">
+					<span>STACK</span>
+					<input class="mono-input" name="stack" value={p.stack} use:autosave />
+				</label>
+			</form>
+			<form method="POST" action="?/repo" use:quietEnhance>
+				<label class="field">
+					<span>REPO / LINK</span>
+					<input
+						class="mono-input"
+						name="repo"
+						value={p.repo}
+						placeholder="git.example.dev/…"
+						style="color:var(--accent)"
+						use:autosave
+					/>
+				</label>
+			</form>
+		</div>
+		<div class="progress" style="margin:20px 0 6px">
+			<div style="background:{statusColor};width:{pct}%"></div>
+		</div>
+		<div class="mono-dim" style="letter-spacing:0.12em;font-size:9.5px">
+			{pct}% · {done} VON {data.tasks.length} ERLEDIGT
+		</div>
+	</section>
+
+	<section class="panel">
+		<div class="panel-label">[ PLAN &amp; AUFGABEN ]</div>
+		<div class="check-list">
+			{#each data.tasks as t (t.id)}
+				<div class="check-row">
+					<form method="POST" action="?/toggleTask" use:enhance style="display:contents">
+						<input type="hidden" name="id" value={t.id} />
+						<button
+							class="checkbox"
+							class:done={!!t.done}
+							style="width:14px;height:14px"
+							title={t.done ? 'wieder öffnen' : 'erledigt'}
+						></button>
+					</form>
+					<span class="txt" class:done={!!t.done}>{t.text}</span>
+					<form method="POST" action="?/deleteTask" use:enhance style="display:contents">
+						<input type="hidden" name="id" value={t.id} />
+						<button class="x-btn" style="font-size:11px">✕</button>
+					</form>
+				</div>
+			{:else}
+				<div style="padding:10px 0;color:var(--dim);font-size:13px;font-style:italic">
+					noch keine Schritte geplant
+				</div>
+			{/each}
+		</div>
+		<form
+			method="POST"
+			action="?/addTask"
+			use:enhance={() =>
+				async ({ update }) => {
+					stepInput = '';
+					await update();
+				}}
+		>
+			<input
+				class="add-step"
+				name="text"
+				placeholder="+ Schritt → enter"
+				bind:value={stepInput}
+				required
+			/>
+		</form>
+
+		<div class="panel-label spaced">[ NOTIZEN ]</div>
+		<form method="POST" action="?/notes" use:quietEnhance>
+			<textarea
+				name="notes"
+				placeholder="Überlegungen, Entscheidungen, Links, alles was zum Projekt gehört…"
+				style="min-height:260px"
+				value={p.notes}
+				use:autosave
+			></textarea>
+		</form>
+	</section>
+</div>

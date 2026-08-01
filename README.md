@@ -1,16 +1,37 @@
-# Life Management Dashboard („Zentrale")
+# Life Management Dashboard („SISTEMA“)
 
-Selbstgehosteter Personal Hub — ersetzt das Notion-Setup, absorbiert die
-[Budgeting-Web-App](https://github.com/Rayliet223/Budgeting-Web-App) und
-ergänzt ein Schedule-basiertes Curriculum. Vollständige Spezifikation:
-[`spec.md`](spec.md) · UI-Konzept: Artifact (siehe spec).
+Selbstgehosteter Personal Hub im Homelab. Seit dem Redesign 08/2026 ist das
+Design-Artifact „Management Dashboard Design“ die Single Source of Truth:
+fünf Module — **Übersicht, Aufgaben, Uni, Projekte, Notizen** — in einem
+dunklen, editorialen Design (Instrument Serif/Sans + JetBrains Mono).
+Finanzen, Curriculum, Review, Suche und die Kalender-Agenda wurden entfernt
+(die alten Finanz-/Curriculum-Tabellen bleiben in der DB erhalten, haben aber
+keine UI mehr).
 
 ## Stack
 
 - **SvelteKit** (Svelte 5, `adapter-node`) — eine Sprache, ein Prozess
 - **SQLite** über Nodes eingebautes `node:sqlite` (Node ≥ 22, kein C-Toolchain)
-- Kein CSS-Framework; ein handgeschriebenes, E-Ink-taugliches Design-System
-  (hoher Kontrast, monochrom lesbar, Zustand immer Symbol + Wort)
+- Kein CSS-Framework; handgeschriebenes Design-System in `src/app.css`
+  (Tokens + Komponentenklassen, portiert aus dem Artifact)
+- Schriften self-hosted via Fontsource (kein CDN)
+
+## Module
+
+- **Übersicht** (`/`) — Statistik-Kacheln, Heute-Liste, Uni-Fristen,
+  Monats-Plate, Zitat, aktive Projekte, letzte Notizen
+- **Aufgaben** (`/tasks`) — Views Heute/Woche/Board/Alles, Bereiche
+  Persönlich/Uni/Job, Prio P1–P3, Detailseite mit Notizen
+- **Uni** (`/uni`) — Semester (archivierbar) → Kurse (Farbe, Dozent, Termin,
+  ECTS, Note) → Aufgaben (VL/EXC/OTH) + Lernsession (★ pro Tag)
+- **Projekte** (`/projects`) — Kacheln/Board, Status
+  Backlog/Pausiert/Aktiv/Archiv, Plan-&-Aufgaben-Checkliste, Repo-Link
+- **Notizen** (`/notes`) — Ordner mit Akzentfarben, Zwei-Spalten-Editor
+  (Klartext), Suche, Cover-Bild
+
+Bild-Slots (Hero pro Modul, Sidebar-Mood, Dashboard-Plate, Notiz-Cover)
+nehmen Bilder per Klick oder Drag&Drop entgegen; Ablage im `IMAGES_DIR`
+(Dateisystem, kein DB-Eintrag) über `/api/images/[slot]`.
 
 ## Entwicklung
 
@@ -24,7 +45,9 @@ den Server-Build eingebettet). Manuell: `DATABASE_PATH=./dev.db npm run db:migra
 
 **Migrationen sind datums-präfixiert** (`20260713_0001_….sql`) — Absicht:
 beim Deploy übernimmt die App die bestehende budget01-Datenbank in place,
-ohne mit deren `schema_migrations`-Einträgen zu kollidieren (spec §13).
+ohne mit deren `schema_migrations`-Einträgen zu kollidieren.
+`20260801_0010_redesign.sql` überführt Tasks/Uni/Notes/Projects best-effort
+ins neue Schema (Tiptap-Dokumente werden als Klartext übernommen).
 
 ## Produktion (Homelab-Deploy)
 
@@ -36,19 +59,11 @@ Homelab-Repo `budget_repo_url` auf dieses Repo zeigen lassen,
 npm ci
 npm run build        # → build/
 DATABASE_PATH=/var/lib/budget/app.db npm run db:migrate
-HOST=127.0.0.1 PORT=3000 ORIGIN=http://192.168.0.226 DATABASE_PATH=/var/lib/budget/app.db node build
+HOST=127.0.0.1 PORT=3000 ORIGIN=http://192.168.0.226 \
+  DATABASE_PATH=/var/lib/budget/app.db IMAGES_DIR=/var/lib/budget/images \
+  node build
 ```
 
 > **Wichtig:** `ORIGIN` muss auf die im Browser verwendete URL zeigen, sonst
-> blockt SvelteKits CSRF-Schutz alle Formular-POSTs.
-
-## Build-Status (Bricks, spec §11)
-
-- [x] 1 — Shell + Design-System + Home
-- [x] 2 — Tasks (Alltag & Orga) + This Week auf Home
-- [x] 3 — Uni Management (Semester, Classes, uni_tasks)
-- [x] 4 — Finanzen (Port der Budget-App)
-- [x] 5 — Notes + Block-Editor + Inbox
-- [x] 6 — Projects (Kacheln/Liste/Board)
-- [x] 7 — Curriculum (Wochen-Board, Quoten)
-- [x] 8 — Proton-ICS-Agenda + Suche + Review-Flow
+> blockt SvelteKits CSRF-Schutz alle Formular-POSTs. `IMAGES_DIR` sollte auf
+> ein persistentes, beschreibbares Verzeichnis zeigen.

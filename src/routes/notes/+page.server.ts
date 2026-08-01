@@ -1,24 +1,58 @@
+import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { listInbox, listNotes, bereichCounts, createNote, deleteNote } from '$lib/server/notes';
-import { action, int, oneOfOrNull, str } from '$lib/server/forms';
-import { BEREICHE, type Bereich } from '$lib/labels';
+import {
+	createFolder,
+	createNote,
+	deleteFolder,
+	deleteNote,
+	getNote,
+	listFolders,
+	listNotes,
+	renameFolder,
+	updateNoteField
+} from '$lib/server/notes';
+import { action, int, intOrNull, str, strRaw } from '$lib/server/forms';
 
 export const load: PageServerLoad = ({ url }) => {
-	const raw = url.searchParams.get('bereich');
-	const bereich = BEREICHE.includes(raw as Bereich) ? (raw as Bereich) : undefined;
+	const notes = listNotes();
+	const rawId = Number(url.searchParams.get('id'));
+	const active = notes.find((n) => n.id === rawId) ?? notes[0] ?? null;
 	return {
-		bereich: bereich ?? null,
-		inbox: listInbox(),
-		notes: listNotes(bereich),
-		counts: bereichCounts()
+		folders: listFolders(),
+		notes,
+		activeId: active?.id ?? null,
+		active
 	};
 };
 
 export const actions: Actions = {
-	create: action((_event, data) => {
-		createNote(str(data, 'title', 'Titel'), oneOfOrNull(data, 'bereich', BEREICHE));
+	createNote: action((event, data) => {
+		// Neue Notiz landet im Ordner der aktuell offenen Notiz (wie im Design).
+		const currentId = intOrNull(data, 'current');
+		const folderId = currentId ? (getNote(currentId)?.folder_id ?? null) : null;
+		const id = createNote({ title: '', kind: 'journal', folderId });
+		throw redirect(303, `/notes?id=${id}`);
 	}),
-	delete: action((_event, data) => {
+	title: action((_e, data) => {
+		updateNoteField(int(data, 'id'), 'title', strRaw(data, 'title'));
+	}),
+	body: action((_e, data) => {
+		updateNoteField(int(data, 'id'), 'body', strRaw(data, 'body'));
+	}),
+	move: action((_e, data) => {
+		updateNoteField(int(data, 'id'), 'folder_id', intOrNull(data, 'folder'));
+	}),
+	deleteNote: action((_e, data) => {
 		deleteNote(int(data, 'id'));
+		throw redirect(303, '/notes');
+	}),
+	createFolder: action((_e, data) => {
+		createFolder(str(data, 'name', 'Ordner'));
+	}),
+	renameFolder: action((_e, data) => {
+		renameFolder(int(data, 'id'), str(data, 'name', 'Ordner'));
+	}),
+	deleteFolder: action((_e, data) => {
+		deleteFolder(int(data, 'id'));
 	})
 };

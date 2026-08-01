@@ -1,38 +1,51 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { getProject, updateProject, touchProject, deleteProject } from '$lib/server/projects';
-import { saveDocument, renderDocumentHtml } from '$lib/server/documents';
-import { action, oneOf, oneOfOrNull, str, strOrNull } from '$lib/server/forms';
-import { PRIORITIES, PROJECT_STATUSES, PROJECT_TYPES } from '$lib/labels';
+import {
+	addProjectTask,
+	deleteProject,
+	deleteProjectTask,
+	getProject,
+	listProjectTasks,
+	toggleProjectTask,
+	updateProjectField
+} from '$lib/server/projects';
+import { action, int, oneOf, str, strRaw } from '$lib/server/forms';
+import { PROJECT_STATUSES } from '$lib/labels';
 
 export const load: PageServerLoad = ({ params }) => {
-	const id = Number(params.id);
-	const project = Number.isInteger(id) ? getProject(id) : null;
-	if (!project) error(404, 'Projekt nicht gefunden');
-	return { project, html: renderDocumentHtml(project.content) };
+	const project = getProject(Number(params.id));
+	if (!project) throw error(404, 'Projekt nicht gefunden');
+	const tasks = listProjectTasks().filter((t) => t.project_id === project.id);
+	return { project, tasks, pageTitle: project.name || 'Projekt' };
 };
 
 export const actions: Actions = {
-	meta: action((event, data) => {
-		updateProject(Number(event.params.id), {
-			name: str(data, 'name', 'Name'),
-			description: strOrNull(data, 'description'),
-			type: oneOf(data, 'type', PROJECT_TYPES),
-			status: oneOf(data, 'status', PROJECT_STATUSES),
-			priority: oneOfOrNull(data, 'priority', PRIORITIES),
-			techStack: strOrNull(data, 'tech_stack'),
-			link: strOrNull(data, 'link'),
-			startDate: strOrNull(data, 'start_date')
-		});
+	name: action(({ params }, data) => {
+		updateProjectField(Number(params.id), 'name', str(data, 'name', 'Name'));
 	}),
-	save: action((event, data) => {
-		const project = getProject(Number(event.params.id));
-		if (!project?.document_id) error(404, 'Dokument nicht gefunden');
-		saveDocument(project.document_id, str(data, 'content', 'Inhalt'));
-		touchProject(project.id);
+	stack: action(({ params }, data) => {
+		updateProjectField(Number(params.id), 'stack', strRaw(data, 'stack'));
 	}),
-	delete: (event) => {
-		deleteProject(Number(event.params.id));
-		redirect(303, '/projects');
-	}
+	status: action(({ params }, data) => {
+		updateProjectField(Number(params.id), 'status', oneOf(data, 'status', PROJECT_STATUSES));
+	}),
+	repo: action(({ params }, data) => {
+		updateProjectField(Number(params.id), 'repo', strRaw(data, 'repo'));
+	}),
+	notes: action(({ params }, data) => {
+		updateProjectField(Number(params.id), 'notes', strRaw(data, 'notes'));
+	}),
+	addTask: action(({ params }, data) => {
+		addProjectTask(Number(params.id), str(data, 'text', 'Schritt'));
+	}),
+	toggleTask: action((_e, data) => {
+		toggleProjectTask(int(data, 'id'));
+	}),
+	deleteTask: action((_e, data) => {
+		deleteProjectTask(int(data, 'id'));
+	}),
+	delete: action(({ params }) => {
+		deleteProject(Number(params.id));
+		throw redirect(303, '/projects');
+	})
 };

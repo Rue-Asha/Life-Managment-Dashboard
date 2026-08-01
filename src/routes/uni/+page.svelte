@@ -1,350 +1,335 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import PrioritySelect from '$lib/PrioritySelect.svelte';
-	import { formatDate, formatDeadline, daysUntil } from '$lib/format';
-	import { CLASS_STATUS_LABELS, PRIORITY_LABELS, UNI_TASK_TYPE_LABELS } from '$lib/labels';
-	import type { UniTask } from '$lib/server/uni';
+	import { goto } from '$app/navigation';
+	import { UNI_TYPES, courseColor, prioColor, prioLabel, typeColor, type UniType } from '$lib/labels';
+	import { dueColor, dueLabel, fmtDay } from '$lib/format';
 
 	let { data, form } = $props();
 
-	const selectedSemester = $derived(data.semesters.find((s) => s.id === data.selected) ?? null);
+	const pad = (n: number) => String(n).padStart(2, '0');
 
-	function confirmSubmit(message: string) {
-		return (event: SubmitEvent) => {
-			if (!confirm(message)) event.preventDefault();
-		};
+	const semCourses = $derived(data.courses.filter((c) => c.semester_id === data.semId));
+	const semIds = $derived(new Set(semCourses.map((c) => c.id)));
+	const semTasks = $derived(data.uniTasks.filter((t) => semIds.has(t.course_id)));
+	const visibleSems = $derived(
+		data.semesters.filter((s) => data.showArchived || s.status === 'active')
+	);
+
+	// Anlege-Leiste Aufgaben: Typ & Prio zyklisch.
+	let newType: UniType = $state('VL');
+	let newPrio = $state(2);
+	const cycleNewType = () => (newType = UNI_TYPES[(UNI_TYPES.indexOf(newType) + 1) % UNI_TYPES.length]);
+	const cycleNewPrio = () => (newPrio = newPrio === 3 ? 1 : newPrio + 1);
+
+	let addSemForm: HTMLFormElement | undefined = $state();
+	let addSemName = $state('');
+	function promptSemester() {
+		const name = (window.prompt('Semester, z. B. WS 2026/27') || '').trim();
+		if (!name) return;
+		addSemName = name;
+		// Warten bis der Wert im DOM steht, dann abschicken.
+		queueMicrotask(() => addSemForm?.requestSubmit());
 	}
+
+	function semHref(params: Record<string, string | null>): string {
+		const p = new URLSearchParams();
+		if (data.view !== 'courses') p.set('view', data.view!);
+		if (data.semId != null) p.set('sem', String(data.semId));
+		if (data.showArchived) p.set('archiv', '1');
+		for (const [k, v] of Object.entries(params)) {
+			if (v === null) p.delete(k);
+			else p.set(k, v);
+		}
+		const q = p.toString();
+		return q ? `/uni?${q}` : '/uni';
+	}
+
+	const sessionIds = $derived(new Set(data.session.map((s) => s.task_id)));
+	const sessionTasks = $derived(data.uniTasks.filter((t) => sessionIds.has(t.id)));
+	const sessionDone = $derived(sessionTasks.filter((t) => t.done).length);
+	const sessionPct = $derived(
+		sessionTasks.length ? Math.round((sessionDone / sessionTasks.length) * 100) : 0
+	);
+	const sessionDate = $derived(data.session[0]?.date ?? '');
+	const sessionStale = $derived(!!sessionDate && sessionDate !== data.today && sessionTasks.length > 0);
+
+	const typeOrder = (t: string) => {
+		const i = UNI_TYPES.indexOf(t as UniType);
+		return i < 0 ? 99 : i;
+	};
+	const groups = $derived(
+		(data.courseFilter ? semCourses.filter((c) => c.id === data.courseFilter) : semCourses).map(
+			(c) => ({
+				course: c,
+				items: data.uniTasks
+					.filter((t) => t.course_id === c.id)
+					.toSorted(
+						(a, b) =>
+							typeOrder(a.type) - typeOrder(b.type) ||
+							a.prio - b.prio ||
+							((a.due || '9') < (b.due || '9') ? -1 : 1)
+					)
+			})
+		)
+	);
+
+	const courseOf = (id: number) => data.courses.find((c) => c.id === id);
 </script>
 
-<svelte:head><title>Uni · Zentrale</title></svelte:head>
+{#if form?.message}<div class="form-error">{form.message}</div>{/if}
 
-{#snippet taskRow(task: UniTask)}
-	<div class="row">
-		<form class="inline" method="POST" action="?/toggle" use:enhance>
-			<input type="hidden" name="id" value={task.id} />
-			<button
-				class="cbox"
-				class:checked={task.status === 'done'}
-				aria-label="„{task.title}“ {task.status === 'done' ? 'wieder öffnen' : 'abhaken'}"
-				>{task.status === 'done' ? '✓' : ''}</button
+<div class="chips" style="margin-bottom:16px">
+	<span class="chips-label">[ SEMESTER ]</span>
+	{#each visibleSems as sm (sm.id)}
+		{@const on = sm.id === data.semId}
+		{@const archived = sm.status === 'archived'}
+		<span
+			style="display:flex;align-items:center;border:1px solid {on
+				? archived
+					? 'var(--dim)'
+					: 'var(--accent)'
+				: 'var(--line)'};border-radius:2px;overflow:hidden;background:{on ? 'var(--card-hover)' : 'transparent'}"
+		>
+			<a
+				class="chip"
+				style="border:0;background:transparent;color:{on ? 'var(--ink)' : archived ? 'var(--dim)' : 'var(--mut)'}"
+				href={semHref({ sem: String(sm.id) })}
 			>
-		</form>
-		<span class="title" class:done-text={task.status === 'done'}>{task.title}</span>
-		{#if task.class_name}<span class="chip">{task.class_name}</span>{/if}
-		{#if task.task_type}
-			<span class="chip mono">{UNI_TASK_TYPE_LABELS[task.task_type]}</span>
-		{/if}
-		{#if task.priority}
-			<span class="badge {PRIORITY_LABELS[task.priority].tone}"
-				>{PRIORITY_LABELS[task.priority].label}</span
-			>
-		{/if}
-		{#if task.deadline}
-			<span class="due" class:soon={daysUntil(task.deadline) <= 3}
-				>{formatDeadline(task.deadline)}</span
-			>
-		{/if}
-		{#if task.status !== 'done'}
-			<form class="inline" method="POST" action="?/week" use:enhance>
-				<input type="hidden" name="id" value={task.id} />
-				<input type="hidden" name="on" value="0" />
-				<button class="fchip" title="Zurück ins Backlog">→ Backlog</button>
-			</form>
-		{/if}
-		<form class="inline" method="POST" action="?/delete" use:enhance>
-			<input type="hidden" name="id" value={task.id} />
-			<button class="iconbtn" title="Löschen" aria-label="„{task.title}“ löschen">✕</button>
-		</form>
-	</div>
-{/snippet}
-
-<div class="page-head">
-	<div>
-		<p class="eyebrow">Uni</p>
-		<h1>Uni Management</h1>
-	</div>
-	<div class="actions">
-		<a class="btn ghost" href="/uni/tasks">Task-Datenbank →</a>
-	</div>
-</div>
-
-{#if form?.message}<p class="form-error">{form.message}</p>{/if}
-
-<h2 class="sect">Semester</h2>
-{#if data.semesters.length > 0}
-	<div class="filters">
-		{#each data.semesters as sem (sem.id)}
-			<a class="fchip" class:on={sem.id === data.selected} href="/uni?semester={sem.id}"
-				>{sem.status === 'archived' ? '▣ ' : ''}{sem.name}
-				<span class="mono">· {sem.class_count}</span></a
-			>
-		{/each}
-	</div>
-{/if}
-<details class="editor" open={data.semesters.length === 0} style="margin-bottom:8px;">
-	<summary
-		>{data.semesters.length === 0 ? '＋ Erstes Semester anlegen' : 'Semester verwalten'}</summary
-	>
-	<div class="form-row">
-		<form method="POST" action="?/createSemester" use:enhance style="display:contents;">
-			<label class="field">
-				<span>Neues Semester</span>
-				<input type="text" name="name" required placeholder="SS 26" />
-			</label>
-			<button class="btn">＋ Anlegen</button>
-		</form>
-		{#if selectedSemester}
-			<span class="sep"></span>
-			<form class="inline" method="POST" action="?/semesterStatus" use:enhance>
-				<input type="hidden" name="id" value={selectedSemester.id} />
-				<input
-					type="hidden"
-					name="status"
-					value={selectedSemester.status === 'active' ? 'archived' : 'active'}
-				/>
-				<button class="btn ghost"
-					>{selectedSemester.status === 'active'
-						? `▣ „${selectedSemester.name}“ archivieren`
-						: `● „${selectedSemester.name}“ aktivieren`}</button
+				{sm.name}
+				<span class="n">{archived ? 'ARCHIV' : pad(data.courses.filter((c) => c.semester_id === sm.id).length)}</span>
+			</a>
+			<form method="POST" action="?/archiveSemester" use:enhance style="display:contents">
+				<input type="hidden" name="id" value={sm.id} />
+				<button
+					class="btn-text"
+					style="border-left:1px solid var(--line);padding:6px 10px;font-size:9px;letter-spacing:0.12em"
+					title="archivieren">{archived ? '↺' : 'ARCH.'}</button
 				>
 			</form>
-			<form
-				class="inline"
-				method="POST"
-				action="?/deleteSemester"
-				onsubmit={confirmSubmit(
-					`Semester „${selectedSemester.name}“ samt allen Classes löschen? Uni-Tasks bleiben (ohne Modul).`
-				)}
-			>
-				<input type="hidden" name="id" value={selectedSemester.id} />
-				<button class="btn ghost">✕ Löschen</button>
-			</form>
+		</span>
+	{/each}
+	<button type="button" class="btn-ghost" onclick={promptSemester}>+ SEMESTER</button>
+	<form bind:this={addSemForm} method="POST" action="?/addSemester" use:enhance hidden>
+		<input type="hidden" name="name" value={addSemName} />
+	</form>
+	<a
+		class="btn-text"
+		style="margin-left:auto;letter-spacing:0.16em;font-size:9px"
+		href={semHref({ archiv: data.showArchived ? null : '1' })}
+		>{data.showArchived ? 'ARCHIV AUSBLENDEN' : 'ARCHIV ANZEIGEN'}</a
+	>
+	{#if data.semId != null}
+		<form
+			method="POST"
+			action="?/deleteSemester"
+			use:enhance
+			onsubmit={(e) => {
+				const sm = data.semesters.find((s) => s.id === data.semId);
+				if (!window.confirm(`Semester „${sm?.name}“ mit allen Kursen löschen?`)) e.preventDefault();
+			}}
+		>
+			<input type="hidden" name="id" value={data.semId} />
+			<button class="btn-text" style="color:var(--faint);letter-spacing:0.16em;font-size:9px">SEMESTER LÖSCHEN</button>
+		</form>
+	{/if}
+</div>
+
+{#if data.view === 'courses'}
+	<div style="animation:md-rise 300ms ease both">
+		<form class="addbar" method="POST" action="?/addCourse" use:enhance>
+			<input type="hidden" name="sem" value={data.semId ?? ''} />
+			<input type="text" name="name" placeholder="Neuer Kurs…" required disabled={data.semId == null} />
+			<input class="boxed" name="code" placeholder="kürzel" style="flex:0 1 140px" />
+			<button type="submit" class="btn-primary" disabled={data.semId == null}>Anlegen</button>
+		</form>
+
+		<div class="tile-grid">
+			{#each semCourses as c (c.id)}
+				{@const accent = courseColor(c.hue)}
+				{@const ts = data.uniTasks.filter((t) => t.course_id === c.id)}
+				{@const open = ts.filter((t) => !t.done)}
+				{@const next = open.toSorted((a, b) => ((a.due || '9') < (b.due || '9') ? -1 : 1))[0]}
+				<a
+					class="tile"
+					href={`/uni/courses/${c.id}`}
+					style="border-top-color:{accent};background:linear-gradient(135deg,{accent}1F 0%,rgba(18,16,17,0) 58%)"
+				>
+					<div class="tile-top">
+						<span class="tile-name">{c.name}</span>
+						<span class="badge" style="color:{accent}">{c.code || '—'}</span>
+					</div>
+					<div class="tile-meta">
+						<span>{c.docent || '—'}</span>
+						<span>{c.slot || '—'}</span>
+						<span>{c.ects || '—'} ECTS</span>
+						{#if c.grade}<span style="color:{accent}">NOTE {c.grade}</span>{/if}
+					</div>
+					<div class="tile-foot">
+						<span class="tile-next">↳ {next?.text ?? 'nichts offen'}</span>
+						<span class="mono">{open.length} / {ts.length} OFFEN</span>
+					</div>
+				</a>
+			{/each}
+		</div>
+		{#if semCourses.length === 0}
+			<div class="empty-serif" style="padding:26px 0">Noch keine Kurse in diesem Semester.</div>
 		{/if}
 	</div>
-</details>
-
-{#if selectedSemester}
-	<h2 class="sect">
-		Classes · {selectedSemester.name}
-		{#if selectedSemester.status === 'archived'}<span class="soft">▣ archiviert</span>{/if}
-	</h2>
-	{#if data.classes.length === 0}
-		<div class="card dashed">
-			<p class="dimmer" style="margin:0;">Noch keine Classes in diesem Semester.</p>
+{:else if data.view === 'tasks'}
+	<div style="animation:md-rise 300ms ease both">
+		<div class="chips">
+			<span class="chips-label">[ KURS ]</span>
+			<a class="chip" class:on={data.courseFilter === null} href={semHref({ course: null })}>
+				<span class="dot" style="background:transparent"></span>
+				Alle
+				<span class="n">{pad(semTasks.filter((t) => !t.done).length)}</span>
+			</a>
+			{#each semCourses as c (c.id)}
+				{@const on = data.courseFilter === c.id}
+				<a
+					class="chip"
+					class:on
+					style={on ? `border-color:${courseColor(c.hue)}` : ''}
+					href={semHref({ course: String(c.id) })}
+				>
+					<span class="dot" style="background:{courseColor(c.hue)}"></span>
+					{c.name}
+					<span class="n">{pad(data.uniTasks.filter((t) => t.course_id === c.id && !t.done).length)}</span>
+				</a>
+			{/each}
 		</div>
-	{:else}
-		<div class="grid cols-3">
-			{#each data.classes as cls (cls.id)}
-				<div class="card uclass lift">
-					<a class="stretch" href="/uni/classes/{cls.id}" aria-label="„{cls.name}“ öffnen"></a>
-					<div class="uclass-head">
-						<h3>{cls.name}</h3>
-						<span class="badge {CLASS_STATUS_LABELS[cls.status].tone}"
-							>{CLASS_STATUS_LABELS[cls.status].label}</span
-						>
+
+		<form class="addbar" method="POST" action="?/addTask" use:enhance>
+			<input type="text" name="text" placeholder="Was ist zu tun?" required />
+			<select name="course" required>
+				{#each semCourses as c (c.id)}
+					<option value={c.id}>{c.name}</option>
+				{/each}
+			</select>
+			<input type="date" name="due" />
+			<input type="hidden" name="type" value={newType} />
+			<input type="hidden" name="prio" value={newPrio} />
+			<button type="button" class="cycle" style="color:{typeColor(newType)}" title="Typ" onclick={cycleNewType}>
+				{newType}
+			</button>
+			<button type="button" class="cycle" style="color:{prioColor(newPrio)}" onclick={cycleNewPrio}>
+				{prioLabel(newPrio)}
+			</button>
+			<button type="submit" class="btn-primary" disabled={semCourses.length === 0}>Anlegen</button>
+		</form>
+
+		<div style="display:flex;flex-direction:column;gap:26px">
+			{#each groups as g (g.course.id)}
+				<section>
+					<div class="section-head">
+						<span class="dot" style="background:{courseColor(g.course.hue)}"></span>
+						<span class="serif-title">{g.course.name}</span>
+						<span class="rule"></span>
+						<span class="meta">{g.items.filter((t) => !t.done).length} OFFEN / {g.items.length}</span>
 					</div>
-					<div class="uclass-meta">
-						{#if cls.professor}<span>{cls.professor}</span>{/if}
-						{#if cls.schedule || cls.room}
-							<span class="mono"
-								>{cls.schedule ?? ''}{#if cls.schedule && cls.room} · {/if}{cls.room ?? ''}</span
-							>
-						{/if}
-						{#if cls.cps}<span class="mono">{cls.cps} CP</span>{/if}
-						{#if cls.exam_date}
-							<span
-								>Klausur:
-								<span class="mono" class:crit-text={daysUntil(cls.exam_date) <= 14}
-									>{formatDate(cls.exam_date)}</span
-								>{#if daysUntil(cls.exam_date) >= 0}
-									(in {daysUntil(cls.exam_date)} Tagen){/if}</span
-							>
-						{/if}
-						{#if cls.description}<span class="desc dimmer">{cls.description}</span>{/if}
+					<div class="list-panel">
+						{#each g.items as t (t.id)}
+							{@const inSession = sessionIds.has(t.id)}
+							<div class="row">
+								<form method="POST" action="?/toggle" use:enhance style="display:contents">
+									<input type="hidden" name="id" value={t.id} />
+									<button class="checkbox" class:done={!!t.done} title={t.done ? 'wieder öffnen' : 'erledigt'}></button>
+								</form>
+								<span class="prio-bar" style="background:{prioColor(t.prio)};cursor:default"></span>
+								<button type="button" class="row-text" class:done={!!t.done} title="Details öffnen" onclick={() => goto(`/uni/tasks/${t.id}`)}>
+									{t.text}
+								</button>
+								<span class="note-flag">{t.notes.trim() ? '✎' : ''}</span>
+								<form method="POST" action="?/session" use:enhance style="display:contents">
+									<input type="hidden" name="id" value={t.id} />
+									<button class="star-btn" title="zur Session" style="color:{inSession ? 'var(--gold)' : 'var(--faint)'}">
+										{inSession ? '★' : '☆'}
+									</button>
+								</form>
+								<form method="POST" action="?/type" use:enhance style="display:contents">
+									<input type="hidden" name="id" value={t.id} />
+									<button
+										class="badge"
+										style="color:{typeColor(t.type)};background:{typeColor(t.type)}22;letter-spacing:0.14em"
+										title="Typ wechseln">{t.type}</button
+									>
+								</form>
+								<span class="due-mono" style="color:{dueColor(t.due, t.done)}">{dueLabel(t.due)}</span>
+								<form method="POST" action="?/delete" use:enhance style="display:contents">
+									<input type="hidden" name="id" value={t.id} />
+									<button class="x-btn">✕</button>
+								</form>
+							</div>
+						{:else}
+							<div class="empty">frei</div>
+						{/each}
 					</div>
-					<div class="uclass-foot">
-						{#if cls.open_tasks > 0}<span class="chip accent">{cls.open_tasks} offen</span>{/if}
-						{#if cls.archive_url}
-							<a class="more above" href={cls.archive_url} target="_blank" rel="noreferrer"
-								>↗ Notizen-Archiv (Boox)</a
-							>
-						{/if}
+				</section>
+			{/each}
+		</div>
+	</div>
+{:else}
+	<div style="animation:md-rise 300ms ease both">
+		<section class="session-head">
+			<div class="top">
+				<div>
+					<div class="mono-label">
+						[ LERNSESSION · {sessionDate ? fmtDay(sessionDate).toUpperCase() : 'KEINE SESSION'} ]
 					</div>
+					<div class="count">{pad(sessionTasks.length)} Aufgaben gewählt</div>
+				</div>
+				<div style="display:flex;gap:8px;align-items:center">
+					<form method="POST" action="?/sweepSession" use:enhance>
+						<button class="btn-ghost" style="color:var(--mut)">ERLEDIGTE ENTFERNEN</button>
+					</form>
+					<form method="POST" action="?/clearSession" use:enhance>
+						<button class="btn-ghost danger" style="color:var(--dim)">SESSION LEEREN</button>
+					</form>
+				</div>
+			</div>
+			<div class="progress" style="margin:20px 0 8px">
+				<div style="background:var(--gold);width:{sessionPct}%"></div>
+			</div>
+			<div class="mono-dim" style="letter-spacing:0.14em;font-size:9.5px">
+				{sessionDone} / {sessionTasks.length} ERLEDIGT
+			</div>
+			{#if sessionStale}
+				<div class="stale">↳ SESSION VON EINEM FRÜHEREN TAG</div>
+			{/if}
+		</section>
+
+		<div class="list-panel">
+			{#each sessionTasks as t (t.id)}
+				{@const c = courseOf(t.course_id)}
+				<div class="row" style="padding:12px 18px">
+					<form method="POST" action="?/toggle" use:enhance style="display:contents">
+						<input type="hidden" name="id" value={t.id} />
+						<button
+							class="checkbox"
+							class:done={!!t.done}
+							style="width:16px;height:16px"
+							title={t.done ? 'wieder öffnen' : 'erledigt'}
+						></button>
+					</form>
+					<span class="prio-bar" style="background:{prioColor(t.prio)};height:17px"></span>
+					<button type="button" class="row-text" class:done={!!t.done} style="font-size:14.5px" onclick={() => goto(`/uni/tasks/${t.id}`)}>
+						{t.text}
+					</button>
+					<span class="badge" style="color:{courseColor(c?.hue)};max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+						{c?.name ?? '—'}
+					</span>
+					<span class="mono-dim" style="color:{typeColor(t.type)};letter-spacing:0.14em">{t.type}</span>
+					<span class="due-mono" style="color:{dueColor(t.due, t.done)}">{dueLabel(t.due)}</span>
+					<form method="POST" action="?/session" use:enhance style="display:contents">
+						<input type="hidden" name="id" value={t.id} />
+						<button class="x-btn" title="aus Session entfernen">✕</button>
+					</form>
+				</div>
+			{:else}
+				<div class="empty-serif" style="padding:26px 20px">
+					Noch nichts gewählt — markiere Aufgaben mit ☆ in der Aufgabenliste.
 				</div>
 			{/each}
 		</div>
-	{/if}
-
-	<details class="editor" open={data.classes.length === 0} style="margin-top:14px;">
-		<summary>＋ Class anlegen</summary>
-		<form method="POST" action="?/createClass" use:enhance>
-			<input type="hidden" name="semester_id" value={selectedSemester.id} />
-			<div class="form-row">
-				<label class="field" style="flex:1; min-width:200px;">
-					<span>Name</span>
-					<input type="text" name="name" required placeholder="Algorithmen & Datenstrukturen" />
-				</label>
-				<label class="field">
-					<span>Professor</span>
-					<input type="text" name="professor" />
-				</label>
-				<label class="field">
-					<span>Schedule</span>
-					<input type="text" name="schedule" placeholder="Di 09:50 · Fr 08:00" />
-				</label>
-				<label class="field">
-					<span>Raum</span>
-					<input type="text" name="room" />
-				</label>
-				<label class="field" style="max-width:90px;">
-					<span>CPs</span>
-					<input type="text" name="cps" inputmode="decimal" placeholder="5" />
-				</label>
-				<label class="field">
-					<span>Klausur</span>
-					<input type="date" name="exam_date" />
-				</label>
-				<label class="field" style="min-width:200px;">
-					<span>Archiv-URL (Boox)</span>
-					<input type="text" name="archive_url" placeholder="https://…" />
-				</label>
-				<button class="btn">＋ Anlegen</button>
-			</div>
-		</form>
-	</details>
+	</div>
 {/if}
-
-<h2 class="sect">
-	This Week · {data.weekOpen.length} offen
-	<span class="soft">{data.stats.done}/{data.stats.total} erledigt</span>
-</h2>
-<div class="card" style="margin-bottom:14px;">
-	<form method="POST" action="?/createTask" use:enhance>
-		<div class="form-row">
-			<label class="field" style="flex:1; min-width:220px;">
-				<span>Neue Uni-Task</span>
-				<input type="text" name="title" required placeholder="Übungsblatt 5 bearbeiten" />
-			</label>
-			<label class="field">
-				<span>Modul</span>
-				<select name="class_id">
-					<option value="">—</option>
-					{#each data.allClasses as cls (cls.id)}
-						<option value={cls.id}>{cls.name} ({cls.semester_name})</option>
-					{/each}
-				</select>
-			</label>
-			<label class="field">
-				<span>Type</span>
-				<select name="task_type">
-					<option value="">—</option>
-					{#each Object.entries(UNI_TASK_TYPE_LABELS) as [value, label] (value)}
-						<option {value}>{label}</option>
-					{/each}
-				</select>
-			</label>
-			<PrioritySelect />
-			<label class="field">
-				<span>Deadline</span>
-				<input type="date" name="deadline" />
-			</label>
-			<label class="check"><input type="checkbox" name="this_week" checked /> This Week</label>
-			<button class="btn">＋ Anlegen</button>
-		</div>
-	</form>
-</div>
-<div class="card">
-	{#if data.weekOpen.length === 0 && data.weekDone.length === 0}
-		<p class="dim" style="margin:0;">
-			Nichts eingeplant — neue Task oben anlegen oder im
-			<a href="/uni/tasks">Backlog der Task-Datenbank</a> „→ This Week“ drücken.
-		</p>
-	{:else}
-		<div class="rows">
-			{#each data.weekOpen as task (task.id)}
-				{@render taskRow(task)}
-			{/each}
-			{#each data.weekDone as task (task.id)}
-				{@render taskRow(task)}
-			{/each}
-		</div>
-	{/if}
-	<a class="more" href="/uni/tasks">Volle Task-Datenbank →</a>
-</div>
-
-<style>
-	.crit-text {
-		color: var(--crit);
-		font-weight: 600;
-	}
-
-	/* Class card — the whole box is the link (stretched-link pattern). */
-	.uclass {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-	}
-	.uclass .stretch {
-		position: absolute;
-		inset: 0;
-		z-index: 1;
-		border-radius: inherit;
-	}
-	.uclass .stretch:focus-visible {
-		outline: 2px solid var(--accent);
-		outline-offset: 2px;
-	}
-	/* Secondary links (archive) must rise above the stretched link. */
-	.uclass .above {
-		position: relative;
-		z-index: 2;
-	}
-	.uclass-head {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 10px;
-	}
-	.uclass-head h3 {
-		margin: 0;
-		font-size: 16.5px;
-		font-weight: 650;
-		letter-spacing: -0.01em;
-		line-height: 1.35;
-		color: var(--ink);
-		transition: color var(--dur) var(--ease);
-	}
-	.uclass:hover .uclass-head h3 {
-		color: var(--accent);
-	}
-	.uclass-meta {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-		font-size: 13.5px;
-		color: var(--ink2);
-	}
-	.uclass-meta .mono {
-		color: var(--ink2);
-	}
-	.uclass-meta .desc {
-		margin-top: 2px;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-		line-height: 1.5;
-	}
-	.uclass-foot {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		flex-wrap: wrap;
-		margin-top: auto;
-	}
-	.uclass-foot .more {
-		margin-top: 0;
-	}
-</style>

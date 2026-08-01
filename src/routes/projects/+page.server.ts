@@ -1,52 +1,25 @@
 import type { Actions, PageServerLoad } from './$types';
 import {
-	listProjects,
+	advanceProjectStatus,
 	createProject,
-	setProjectStatus,
-	deleteProject
+	listProjects,
+	listProjectTasks
 } from '$lib/server/projects';
-import { action, int, oneOf, oneOfOrNull, str, strOrNull } from '$lib/server/forms';
-import {
-	PRIORITIES,
-	PROJECT_STATUSES,
-	PROJECT_TYPES,
-	PROJECT_VIEWS,
-	type ProjectView
-} from '$lib/labels';
+import { action, int, str, strOrNull } from '$lib/server/forms';
 
-const VIEW_COOKIE = 'projects_view';
-
-export const load: PageServerLoad = ({ url, cookies }) => {
-	const param = url.searchParams.get('view');
-	let view: ProjectView = 'grid';
-	if (PROJECT_VIEWS.includes(param as ProjectView)) {
-		view = param as ProjectView;
-		// The chosen view is the user's preference — persist it (spec §4.4).
-		cookies.set(VIEW_COOKIE, view, { path: '/', maxAge: 60 * 60 * 24 * 365 });
-	} else {
-		const saved = cookies.get(VIEW_COOKIE);
-		if (PROJECT_VIEWS.includes(saved as ProjectView)) view = saved as ProjectView;
-	}
-	return { view, projects: listProjects() };
+export const load: PageServerLoad = ({ url }) => {
+	return {
+		view: url.searchParams.get('view') === 'board' ? 'board' : 'tiles',
+		projects: listProjects(),
+		projectTasks: listProjectTasks()
+	};
 };
 
 export const actions: Actions = {
-	create: action((_event, data) => {
-		createProject({
-			name: str(data, 'name', 'Name'),
-			description: strOrNull(data, 'description'),
-			type: oneOf(data, 'type', PROJECT_TYPES),
-			status: oneOf(data, 'status', PROJECT_STATUSES),
-			priority: oneOfOrNull(data, 'priority', PRIORITIES),
-			techStack: strOrNull(data, 'tech_stack'),
-			link: strOrNull(data, 'link'),
-			startDate: strOrNull(data, 'start_date')
-		});
+	create: action((_e, data) => {
+		createProject(str(data, 'name', 'Projekt'), strOrNull(data, 'stack') ?? 'TBD');
 	}),
-	status: action((_event, data) => {
-		setProjectStatus(int(data, 'id'), oneOf(data, 'status', PROJECT_STATUSES));
-	}),
-	delete: action((_event, data) => {
-		deleteProject(int(data, 'id'));
+	advance: action((_e, data) => {
+		advanceProjectStatus(int(data, 'id'));
 	})
 };

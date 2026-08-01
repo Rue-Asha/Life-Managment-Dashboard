@@ -1,108 +1,93 @@
 import { getDb } from './db';
-import { createDocument, deleteDocument } from './documents';
-import type { Priority, ProjectStatus, ProjectType } from '$lib/labels';
+import type { ProjectStatus } from '$lib/labels';
 
 export interface Project {
 	id: number;
 	name: string;
-	description: string | null;
-	type: ProjectType;
+	stack: string;
 	status: ProjectStatus;
-	priority: Priority | null;
-	tech_stack: string | null;
-	link: string | null;
-	start_date: string | null;
-	document_id: number | null;
+	repo: string;
+	goal: string;
+	notes: string;
 	created_at: string;
 	updated_at: string;
 }
 
-const SORT = `CASE status WHEN 'in_progress' THEN 0 WHEN 'backlog' THEN 1 WHEN 'paused' THEN 2
-              WHEN 'done' THEN 3 ELSE 4 END,
-              CASE priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 WHEN 'low' THEN 2 ELSE 3 END,
-              updated_at DESC`;
+export interface ProjectTask {
+	id: number;
+	project_id: number;
+	text: string;
+	done: number;
+	sort_order: number;
+}
 
 export function listProjects(): Project[] {
+	return getDb().prepare('SELECT * FROM projects ORDER BY id DESC').all() as unknown as Project[];
+}
+
+export function getProject(id: number): Project | null {
+	return (
+		(getDb().prepare('SELECT * FROM projects WHERE id = ?').get(id) as unknown as Project) ?? null
+	);
+}
+
+export function listProjectTasks(): ProjectTask[] {
 	return getDb()
-		.prepare(`SELECT * FROM projects ORDER BY ${SORT}`)
-		.all() as unknown as Project[];
+		.prepare('SELECT * FROM project_tasks ORDER BY project_id, sort_order, id')
+		.all() as unknown as ProjectTask[];
 }
 
-export function getProject(id: number): (Project & { content: string }) | null {
-	return (getDb()
-		.prepare(
-			`SELECT p.*, COALESCE(d.content, '{"type":"doc","content":[{"type":"paragraph"}]}') AS content
-			 FROM projects p LEFT JOIN documents d ON d.id = p.document_id
-			 WHERE p.id = ?`
-		)
-		.get(id) ?? null) as (Project & { content: string }) | null;
+export function createProject(name: string, stack: string): number {
+	const res = getDb()
+		.prepare(`INSERT INTO projects (name, stack) VALUES (?, ?)`)
+		.run(name, stack.toUpperCase());
+	return Number(res.lastInsertRowid);
 }
 
-export interface ProjectInput {
-	name: string;
-	description: string | null;
-	type: ProjectType;
-	status: ProjectStatus;
-	priority: Priority | null;
-	techStack: string | null;
-	link: string | null;
-	startDate: string | null;
+export function updateProjectField(
+	id: number,
+	field: 'name' | 'stack' | 'status' | 'repo' | 'goal' | 'notes',
+	value: string
+): void {
+	getDb()
+		.prepare(`UPDATE projects SET ${field} = ?, updated_at = datetime('now') WHERE id = ?`)
+		.run(value, id);
 }
 
-export function createProject(input: ProjectInput): number {
-	const documentId = createDocument();
-	const result = getDb()
-		.prepare(
-			`INSERT INTO projects (name, description, type, status, priority, tech_stack, link, start_date, document_id)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-		)
-		.run(
-			input.name,
-			input.description,
-			input.type,
-			input.status,
-			input.priority,
-			input.techStack,
-			input.link,
-			input.startDate,
-			documentId
-		);
-	return Number(result.lastInsertRowid);
-}
-
-export function updateProject(id: number, input: ProjectInput): void {
+/** Board-Pfeil: backlog → paused → active → archived → backlog. */
+export function advanceProjectStatus(id: number): void {
 	getDb()
 		.prepare(
-			`UPDATE projects SET name = ?, description = ?, type = ?, status = ?, priority = ?,
-			   tech_stack = ?, link = ?, start_date = ?, updated_at = datetime('now')
+			`UPDATE projects SET status = CASE status
+			   WHEN 'backlog' THEN 'paused'
+			   WHEN 'paused' THEN 'active'
+			   WHEN 'active' THEN 'archived'
+			   ELSE 'backlog' END,
+			 updated_at = datetime('now')
 			 WHERE id = ?`
 		)
-		.run(
-			input.name,
-			input.description,
-			input.type,
-			input.status,
-			input.priority,
-			input.techStack,
-			input.link,
-			input.startDate,
-			id
-		);
-}
-
-/** Board-view verb: move a card one column left/right (or set directly). */
-export function setProjectStatus(id: number, status: ProjectStatus): void {
-	getDb()
-		.prepare(`UPDATE projects SET status = ?, updated_at = datetime('now') WHERE id = ?`)
-		.run(status, id);
-}
-
-export function touchProject(id: number): void {
-	getDb().prepare(`UPDATE projects SET updated_at = datetime('now') WHERE id = ?`).run(id);
+		.run(id);
 }
 
 export function deleteProject(id: number): void {
-	const project = getProject(id);
 	getDb().prepare('DELETE FROM projects WHERE id = ?').run(id);
-	if (project?.document_id) deleteDocument(project.document_id);
+}
+
+export function addProjectTask(projectId: number, text: string): void {
+	getDb()
+		.prepare(
+			`INSERT INTO project_tasks (project_id, text, sort_order)
+			 VALUES (?, ?, COALESCE((SELECT MAX(sort_order) + 1 FROM project_tasks WHERE project_id = ?), 0))`
+		)
+		.run(projectId, text, projectId);
+}
+
+export function toggleProjectTask(id: number): void {
+	getDb()
+		.prepare(`UPDATE project_tasks SET done = CASE WHEN done = 1 THEN 0 ELSE 1 END WHERE id = ?`)
+		.run(id);
+}
+
+export function deleteProjectTask(id: number): void {
+	getDb().prepare('DELETE FROM project_tasks WHERE id = ?').run(id);
 }
