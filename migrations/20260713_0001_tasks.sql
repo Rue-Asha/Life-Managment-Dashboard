@@ -1,6 +1,6 @@
 -- Brick 2: everyday / organisational tasks (own database; uni study tasks get
 -- their own uni_tasks table with brick 3).
--- Migrations are date-prefixed so that adopting the budget01 database in place
+-- Migrations are date-prefixed so that adopting the budget app's database in place
 -- never collides with its existing schema_migrations entries.
 
 CREATE TABLE tasks (

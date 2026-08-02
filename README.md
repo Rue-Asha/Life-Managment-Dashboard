@@ -39,3 +39,15 @@ drag & drop.
 Single-process SvelteKit app with an embedded SQLite database; runs
 self-hosted on a homelab server, provisioned and deployed via a dedicated
 role in the [homelab repo](https://github.com/Rue-Asha/Homelab-Managment).
+
+## Scope & security model
+
+This is a **single-user app published to show the work**, not a product to
+deploy. It runs on a LAN-only homelab host and assumes that boundary: there is
+**no authentication, no authorisation and no multi-tenancy** — by design, not
+by omission (spec §9). Anyone who can reach the port can read and write
+everything, including the unauthenticated image endpoints.
+
+If you do run it, keep it behind your LAN or a VPN. Do not port-forward it,
+and do not expose it to the internet without putting an authenticating proxy
+in front of it first.

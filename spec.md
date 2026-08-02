@@ -263,7 +263,7 @@ Auth: none in v1 (LAN/VPN only); optional passphrase brick later.
 
 ```
 migrations/                     20260713_0001_….sql (date-prefixed — never
-                                collides with budget01's schema_migrations)
+                                collides with the budget app's schema_migrations)
 scripts/
   migrate.mjs
   import/
@@ -324,8 +324,9 @@ static/
 
 ## 13. Deployment (homelab)
 
-**Reuse the existing `budget01` LXC** (192.168.0.226, CTID 226) instead of
-provisioning a new container — decided in review round 2:
+**Reuse the existing budget LXC** (host and container ID are kept in the
+private homelab inventory) instead of provisioning a new container — decided
+in review round 2:
 
 - Point the existing `budget` role at this repo: `budget_repo_url` →
   `Life-Managment-Dashboard`, bump `budget_version`; register a new read-only
