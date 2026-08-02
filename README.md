@@ -9,101 +9,33 @@ tables stay in the database, they just have no UI any more).
 
 > **Docs:** the write-up on the design rationale and rebuild lives on the blog
 > — [rue-asha.github.io/projects/life-dashboard](https://rue-asha.github.io/projects/life-dashboard/).
-> This README only covers running and deploying the code.
 
 ## Stack
 
 - **SvelteKit** (Svelte 5, `adapter-node`) — one language, one process
-- **SQLite** via Node's built-in `node:sqlite` (Node ≥ 22, no C toolchain)
-- No CSS framework; hand-written design system in `src/app.css`
-  (tokens + component classes, ported from the artifact)
-- Fonts self-hosted via Fontsource (no CDN)
+- **SQLite** via Node's built-in `node:sqlite` — no native addons, no C toolchain
+- No CSS framework; hand-written design system ported from the design artifact
+- Fonts self-hosted (no CDN)
 
 ## Modules
 
-- **Overview** (`/`) — stat tiles, today's list, uni deadlines, monthly plate,
+- **Overview** — stat tiles, today's list, uni deadlines, monthly plate,
   quote, active projects, recent notes
-- **Tasks** (`/tasks`) — Today/Week/Board/All views, areas Personal/Uni/Job,
+- **Tasks** — Today/Week/Board/All views, areas Personal/Uni/Job,
   priorities P1–P3, detail page with notes
-- **Uni** (`/uni`) — semesters (archivable) → courses (colour, lecturer, slot,
-  ECTS, grade) → tasks (LEC/EXC/OTH) + study session (★ per day)
-- **Projects** (`/projects`) — tiles/board, status Backlog/Paused/Active/
-  Archived, plan-and-tasks checklist, repo link
-- **Notes** (`/notes`) — folders with accent colours, two-column layout,
-  search, cover image and a **block editor** (Tiptap): headings, to-do lists,
-  tables, quotes, code, dividers — via the toolbar, via Markdown shorthand
-  (`# `, `- `, `[ ] `, ` ``` `) or through the "/" menu; blocks can be moved by
-  the handle on their left
+- **Uni** — semesters (archivable) → courses (colour, lecturer, slot,
+  ECTS, grade) → tasks (lecture/exercise/other) + study session tracking
+- **Projects** — tiles/board, status Backlog/Paused/Active/Archived,
+  plan-and-tasks checklist, repo link
+- **Notes** — folders with accent colours, search, cover images and a
+  block editor (headings, to-do lists, tables, quotes, code, dividers),
+  usable via toolbar, Markdown shorthand, or a "/" command menu
 
-Image slots (hero per module, sidebar mood, dashboard plate, note cover) accept
-images by click or drag&drop; they are stored in `IMAGES_DIR` (filesystem, no DB
-row) and served through `/api/images/[slot]`.
+Each module also accepts image slots (hero, sidebar, cover art) by click or
+drag & drop.
 
-## Requirements
+## Architecture
 
-- Node.js ≥ 22 (for the built-in `node:sqlite` module — no native addons)
-
-## Development
-
-```bash
-npm install
-cp .env.example .env
-npm run dev          # reads DATABASE_PATH from .env (default ./dev.db)
-```
-
-The database migrates itself on first access (migrations are embedded in the
-server build). Manually: `DATABASE_PATH=./dev.db npm run db:migrate`.
-
-Type-check with `npm run check` (or `check:watch`).
-
-## Configuration
-
-Set via `.env` in development, or environment variables in production:
-
-| Variable       | Purpose                                             | Default    |
-| -------------- | ---------------------------------------------------- | ---------- |
-| `DATABASE_PATH` | Path to the SQLite database file                    | `./dev.db` |
-| `IMAGES_DIR`    | Directory for uploaded image slots                  | `./images` |
-| `HOST`          | Bind address (adapter-node, production only)        | —          |
-| `PORT`          | Listen port (adapter-node, production only)         | —          |
-| `ORIGIN`        | Public URL, required for CSRF-safe form POSTs        | —          |
-
-## Migrations
-
-**Migrations are date-prefixed** (`20260713_0001_….sql`) on purpose: on deploy
-the app adopts the existing budget01 database in place, without colliding with
-its `schema_migrations` entries.
-
-- `20260801_0010_redesign.sql` moves tasks/uni/notes/projects to the new schema
-  on a best-effort basis.
-- `20260802_0011_note_doc.sql` adds `notes.doc` for the block editor: the Tiptap
-  document lives there as JSON, while `notes.body` carries the plain text
-  derived from it (search, excerpts, word count). Notes without a `doc` are
-  rebuilt from their plain text on read — nothing is lost, even if an old note
-  is never touched again.
-- `20260802_0012_english.sql` renames the last German stored value,
-  `uni_tasks.type = 'VL'` (Vorlesung), to `'LEC'`.
-
-## Deployment
-
-Runs on the `life-dashboard01` LXC (192.168.0.223), provisioned by the
-`life-dashboard` Ansible role in the [homelab repo](https://github.com/Rue-Asha/Homelab-Managment).
-To deploy: point `life_dashboard_repo_url` at this repo, pin
-`life_dashboard_version` to a tag, register the deploy key and run the
-playbook.
-
-The role expects this build/run contract:
-
-```bash
-npm ci
-npm run build        # → build/
-DATABASE_PATH=/var/lib/life-dashboard/app.db npm run db:migrate
-HOST=127.0.0.1 PORT=3000 ORIGIN=http://192.168.0.223 \
-  DATABASE_PATH=/var/lib/life-dashboard/app.db \
-  IMAGES_DIR=/var/lib/life-dashboard/images \
-  node build
-```
-
-> **Important:** `ORIGIN` must point at the URL used in the browser, otherwise
-> SvelteKit's CSRF protection blocks every form POST. `IMAGES_DIR` should point
-> at a persistent, writable directory.
+Single-process SvelteKit app with an embedded SQLite database; runs
+self-hosted on a homelab server, provisioned and deployed via a dedicated
+role in the [homelab repo](https://github.com/Rue-Asha/Homelab-Managment).
