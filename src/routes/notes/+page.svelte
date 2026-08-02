@@ -24,21 +24,30 @@
 		return (n.title + n.body).toLowerCase().includes(query);
 	}
 
+	// One accent per folder, keyed by folder id (inbox = null). A note borrows the
+	// accent of its folder, so tree entry and editor stay the same colour.
+	const accents = $derived.by(() => {
+		const map = new Map<number | null, string>([[null, INBOX_COLOR]]);
+		data.folders.forEach((fo, i) => map.set(fo.id, folderColor(i)));
+		return map;
+	});
+	const accentOf = (folderId: number | null): string => accents.get(folderId) ?? INBOX_COLOR;
+
 	// "No folder" (inbox) first, then the folders that were created.
 	const tree = $derived.by(() => {
 		const inbox = {
 			key: 'inbox',
 			id: null as number | null,
 			name: 'No folder',
-			accent: INBOX_COLOR,
+			accent: accentOf(null),
 			canDelete: false,
 			items: data.notes.filter((n) => n.folder_id === null && matches(n))
 		};
-		const rest = data.folders.map((fo, i) => ({
+		const rest = data.folders.map((fo) => ({
 			key: String(fo.id),
 			id: fo.id as number | null,
 			name: fo.name,
-			accent: folderColor(i),
+			accent: accentOf(fo.id),
 			canDelete: true,
 			items: data.notes.filter((n) => n.folder_id === fo.id && matches(n))
 		}));
@@ -71,6 +80,7 @@
 
 	const note = $derived(data.active);
 	const words = $derived(note ? wordCount(note.body) : 0);
+	const noteAccent = $derived(note ? accentOf(note.folder_id) : INBOX_COLOR);
 
 	// Editor autosave: the document goes into a hidden field and the form is
 	// submitted debounced. Anything pending is saved right before a navigation —
@@ -160,7 +170,12 @@
 					</div>
 					{#if isOpen(fo.key)}
 						{#each fo.items as n (n.id)}
-							<a class="note-item" class:on={n.id === data.activeId} href={`/notes?id=${n.id}`}>
+							<a
+								class="note-item"
+								class:on={n.id === data.activeId}
+								style="--accent:{fo.accent}"
+								href={`/notes?id=${n.id}`}
+							>
 								<div class="ntitle">{n.title || 'Untitled'}</div>
 								<div class="nmeta">{NOTE_KIND_LABEL[n.kind]} · {fmtDay(n.updated_at.slice(0, 10))}</div>
 							</a>
@@ -173,7 +188,7 @@
 		</div>
 	</section>
 
-	<section class="note-editor">
+	<section class="note-editor" style="--accent:{noteAccent}">
 		{#if note}
 			{#key note.id}
 				<form method="POST" action="?/title" use:quietEnhance>
