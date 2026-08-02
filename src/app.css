@@ -1928,6 +1928,45 @@ a.dash-row:hover {
 	pointer-events: none;
 }
 
+/* Gap cursor — the caret ProseMirror shows when the arrow keys land the
+ * selection in a spot that holds no text: beside a divider or table, or above
+ * the first block. It renders as its own element, so without these rules the
+ * caret is simply invisible and the note looks like it lost focus.
+ * Ported from prosemirror-gapcursor/style/gapcursor.css, themed. */
+.tt-content .ProseMirror-gapcursor {
+	display: none;
+	pointer-events: none;
+	position: absolute;
+}
+.tt-content .ProseMirror-gapcursor::after {
+	content: '';
+	display: block;
+	position: absolute;
+	top: -2px;
+	width: 22px;
+	border-top: 2px solid var(--accent);
+	animation: tt-caret-blink 1.1s steps(2, start) infinite;
+}
+.tt-content .ProseMirror-focused .ProseMirror-gapcursor {
+	display: block;
+}
+
+@keyframes tt-caret-blink {
+	to {
+		visibility: hidden;
+	}
+}
+
+/* Whole-node selection — the arrows can select a divider or an image outright
+ * instead of placing a text caret. Same problem: show where the selection is. */
+.tt-content .ProseMirror-selectednode {
+	outline: 1px solid var(--accent);
+	outline-offset: 2px;
+}
+.tt-content hr.ProseMirror-selectednode {
+	border-top-color: var(--accent);
+}
+
 /* Placeholder inside an empty block (Placeholder extension). */
 .tt-content .is-empty::before {
 	content: attr(data-placeholder);
