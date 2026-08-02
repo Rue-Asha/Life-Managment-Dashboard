@@ -1,9 +1,9 @@
--- Notizen bekommen einen Block-Editor: `doc` hält das Tiptap-Dokument als JSON,
--- `body` bleibt bestehen und trägt ab jetzt die daraus abgeleitete Klartext-
--- Fassung (Suche, Auszüge auf der Übersicht, Wortzähler).
+-- Notes get a block editor: `doc` holds the Tiptap document as JSON, `body`
+-- stays and from now on carries the plain text derived from it (search,
+-- excerpts on the overview, word count).
 --
--- Bestandsnotizen behalten ihren Klartext und bekommen `doc = ''`; der Server
--- baut daraus beim Lesen ein Dokument (Absätze an Leerzeilen). Erst beim
--- nächsten Speichern wird das JSON persistiert — so geht nichts verloren, auch
--- wenn eine alte Notiz nie wieder angefasst wird.
+-- Existing notes keep their plain text and get `doc = ''`; the server builds a
+-- document from it on read (paragraphs split on blank lines). The JSON is only
+-- persisted on the next save — so nothing is lost, even if an old note is never
+-- touched again.
 ALTER TABLE notes ADD COLUMN doc TEXT NOT NULL DEFAULT '';

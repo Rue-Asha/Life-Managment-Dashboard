@@ -1,9 +1,9 @@
-> **⚠ Historisch (Stand vor 08/2026):** Diese Spec beschreibt die alte
-> „Zentrale“. Seit dem Redesign ist das Design-Artifact „Management
-> Dashboard Design“ die Single Source of Truth (siehe README) —
-> Finanzen, Curriculum, Review, Suche und Kalender sind entfernt.
+> **⚠ Historical (as of before 08/2026):** This spec describes the old
+> "Zentrale". Since the redesign the design artifact "Management Dashboard
+> Design" is the single source of truth (see README) — finance, curriculum,
+> review, search and the calendar have been removed.
 
-# Build-Spec: Life Management Dashboard („Zentrale")
+# Build spec: Life Management Dashboard ("Zentrale")
 
 > Design & scaffold spec for the self-hosted personal hub that replaces Notion,
 > absorbs the Budgeting-Web-App, and adds a Schedule/Curriculum module built on
@@ -40,7 +40,7 @@ system.
 4. **E-Ink readable.** High contrast, grayscale-safe, state always symbol +
    word (`✓ ● ◐ ○`, `▲ ▼`, `⚠`) — never color alone.
 5. **Flexibility over rigidity.** The schedule module encodes *order, duration
-   and weekly quotas* — never fixed clock times as obligations. „Quoten sind
+   and weekly quotas* — never fixed clock times as obligations. "Quotas are
    der Vertrag, nicht die Uhr."
 6. **Boring, robust, few dependencies.** One language, one process, one SQLite
    file.
@@ -76,7 +76,7 @@ documents      id, content JSON (ProseMirror), text_plain (FTS), updated_at
 
 ```
 tasks   id, title,
-        area enum(uni|job|it|personal),   -- uni = ORGA to-dos (Rückmeldung,
+        area enum(uni|job|it|personal),   -- uni = ORGA to-dos (re-registration,
                                           --   BAföG…), never coursework
         status enum(backlog|todo|in_progress|wont_do|done),
         priority enum(high|medium|low) NULL,
@@ -151,7 +151,7 @@ ports from the budget repo, only the UI is rebuilt.
 
 **Philosophy** (fixed context for this module): Warren Buffett 25-5 — five
 focus areas, ranked: **01 CyberSec/IT** (Uni + Werkstudenten-Job + private
-Projekte), **02/03 Gym**, **02/03 Französisch** (Master in Frankreich 2028),
+Projekte), **02/03 Gym**, **02/03 French** (master's in France 2028),
 **04 Kochen**, **05 Kultur** (Musik/Fashion). The module implements **step 3
 of the self-study framework** (define goals → find resources → *make a
 curriculum* → test yourself → track errors → accountability → build
@@ -161,7 +161,7 @@ contract.
 
 ```
 phases           id, name ("Klausurenphase"), status enum(active|planned|archived),
-                 subtitle, transition_note,   -- „// Nach den Klausuren…"
+                 subtitle, transition_note,   -- "// After the exams…"
                  created_at
 
 priorities       id, rank int (1..5), name, note   -- global, editable
@@ -187,7 +187,7 @@ mini_items       id, curriculum_id fk, week_no int, topic, done bool
 **Behavior**
 - Exactly one **active phase**; switching phases swaps the whole board.
   Creating a phase can clone an existing one (the skeleton survives —
-  „das Gerüst bleibt identisch").
+  "the scaffold stays identical").
 - Everything inline-editable & drag-reorderable: blocks within templates,
   template↔weekday assignment, quota targets, mini-curriculum weeks.
 - **Quota ticks**: tapping a quota increments this ISO-week's count
@@ -196,11 +196,11 @@ mini_items       id, curriculum_id fk, week_no int, topic, done bool
 - Home shows **today**: weekday → template → its blocks + tags, plus the
   quota state of the running week.
 - Mini-curricula implement "eine Technik = ein Lernziel" progressions
-  (e.g. Koch W1 Messerführung → W4 Saucen); `done` per week.
+  (e.g. cooking W1 knife skills → W4 sauces); `done` per week.
 
 ## 5. Home dashboard (the morning glance)
 
-- **This Week (groß)**: open `this_week` tasks from **both** task DBs
+- **This Week (large)**: open `this_week` tasks from **both** task DBs
   (labeled ⚡ Alltag / 🎓 Uni), full list + progress — the dominant card.
 - **Kalender (Proton, read-only)**: agenda of the next ~14 days from the
   user's **shared Proton-Calendar ICS link** (`PROTON_ICS_URL` env var,
@@ -208,7 +208,7 @@ mini_items       id, curriculum_id fk, week_no int, topic, done bool
   embeddable widget — the ICS share link is the clean, read-only way. Card
   header links: **Proton Calendar ↗** and **Proton Mail ↗**. If no ICS URL is
   configured the card degrades to the two links. (Replaces the removed
-  "Demnächst" card.)
+  "Up next" card.)
 - **Heute · Schedule**: today's day template (blocks + tags) + week quota
   state from the Curriculum module.
 - **Finanzen**: net worth headline + sparkline, Δ, cross-check badge,
@@ -219,7 +219,7 @@ mini_items       id, curriculum_id fk, week_no int, topic, done bool
 
 - **Morgens (Boox)**: Home — Top tasks, agenda, today's template. Read-only.
 - **Abends**: check off tasks, tick quotas (Gym ✓, FR ✓).
-- **Sonntag — Review flow**: inbox leeren → beide Task-DBs: Woche befüllen →
+- **Sunday — review flow**: empty the inbox → both task DBs: fill the week →
   Quota-Bilanz der Woche ansehen → erste Woche im Monat: Finanz-Ritual.
 - Staleness hints, never blocking modals.
 

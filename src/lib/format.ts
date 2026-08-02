@@ -1,4 +1,4 @@
-/** Datums-Helfer, auf Client und Server nutzbar. */
+/** Date helpers, usable on both client and server. */
 
 export function todayISO(): string {
 	const d = new Date();
@@ -11,21 +11,21 @@ export function todayISO(): string {
 	);
 }
 
-/** "Mi., 05. Aug." — kurzes Datum für Listenzeilen. */
+/** "Wed, 05 Aug" — short date for list rows. */
 export function fmtDay(iso: string | null | undefined): string {
 	if (!iso) return '—';
 	const dt = new Date(iso + 'T00:00:00');
 	if (Number.isNaN(dt.getTime())) return '—';
-	return dt.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: 'short' });
+	return dt.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
 }
 
-/** "HEUTE" oder kurzes Datum für Fristen-Spalten. */
+/** "TODAY" or a short date for due-date columns. */
 export function dueLabel(iso: string | null | undefined): string {
-	if (!iso) return 'kein Datum';
-	return iso === todayISO() ? 'HEUTE' : fmtDay(iso);
+	if (!iso) return 'no date';
+	return iso === todayISO() ? 'TODAY' : fmtDay(iso);
 }
 
-/** Fristen-Farbe: überfällig rot, heute gold, sonst gedeckt. */
+/** Due-date colour: overdue red, today gold, otherwise muted. */
 export function dueColor(iso: string | null | undefined, done: boolean | number): string {
 	if (!iso) return '#5E5654';
 	const today = todayISO();
@@ -34,14 +34,14 @@ export function dueColor(iso: string | null | undefined, done: boolean | number)
 	return '#5E5654';
 }
 
-/** "FREITAG, 01. AUGUST" — Datumszeile im Rail/Hero. */
+/** "FRIDAY, 01 AUGUST" — the date line in the rail and hero. */
 export function todayLabel(): string {
 	return new Date()
-		.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long' })
+		.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long' })
 		.toUpperCase();
 }
 
-/** ISO-Datum n Tage in der Zukunft (lokale Zeit). */
+/** ISO date n days in the future (local time). */
 export function isoInDays(n: number): string {
 	const d = new Date();
 	d.setDate(d.getDate() + n);

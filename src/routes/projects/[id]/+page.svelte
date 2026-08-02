@@ -13,7 +13,7 @@
 </script>
 
 <div class="detail-bar">
-	<a class="btn-back" href="/projects">← ALLE PROJEKTE</a>
+	<a class="btn-back" href="/projects">← ALL PROJECTS</a>
 	<span class="mono-dim" style="letter-spacing:0.18em">STATUS</span>
 	<form method="POST" action="?/status" use:quietEnhance style="display:contents">
 		<select
@@ -28,13 +28,13 @@
 		</select>
 	</form>
 	<form class="spacer" method="POST" action="?/delete" use:enhance>
-		<button class="btn-text">projekt löschen</button>
+		<button class="btn-text">delete project</button>
 	</form>
 </div>
 
 <div class="detail-grid">
 	<section class="panel">
-		<div class="panel-label">[ ECKDATEN ]</div>
+		<div class="panel-label">[ KEY FACTS ]</div>
 		<div class="fields">
 			<form method="POST" action="?/name" use:quietEnhance>
 				<label class="field">
@@ -66,12 +66,12 @@
 			<div style="background:{statusColor};width:{pct}%"></div>
 		</div>
 		<div class="mono-dim" style="letter-spacing:0.12em;font-size:9.5px">
-			{pct}% · {done} VON {data.tasks.length} ERLEDIGT
+			{pct}% · {done} OF {data.tasks.length} DONE
 		</div>
 	</section>
 
 	<section class="panel">
-		<div class="panel-label">[ PLAN &amp; AUFGABEN ]</div>
+		<div class="panel-label">[ PLAN &amp; TASKS ]</div>
 		<div class="check-list">
 			{#each data.tasks as t (t.id)}
 				<div class="check-row">
@@ -81,7 +81,7 @@
 							class="checkbox"
 							class:done={!!t.done}
 							style="width:14px;height:14px"
-							title={t.done ? 'wieder öffnen' : 'erledigt'}
+							title={t.done ? 'reopen' : 'mark done'}
 						></button>
 					</form>
 					<span class="txt" class:done={!!t.done}>{t.text}</span>
@@ -92,7 +92,7 @@
 				</div>
 			{:else}
 				<div style="padding:10px 0;color:var(--dim);font-size:13px;font-style:italic">
-					noch keine Schritte geplant
+					no steps planned yet
 				</div>
 			{/each}
 		</div>
@@ -108,17 +108,17 @@
 			<input
 				class="add-step"
 				name="text"
-				placeholder="+ Schritt → enter"
+				placeholder="+ step → enter"
 				bind:value={stepInput}
 				required
 			/>
 		</form>
 
-		<div class="panel-label spaced">[ NOTIZEN ]</div>
+		<div class="panel-label spaced">[ NOTES ]</div>
 		<form method="POST" action="?/notes" use:quietEnhance>
 			<textarea
 				name="notes"
-				placeholder="Überlegungen, Entscheidungen, Links, alles was zum Projekt gehört…"
+				placeholder="Thoughts, decisions, links — anything that belongs to the project…"
 				style="min-height:260px"
 				value={p.notes}
 				use:autosave

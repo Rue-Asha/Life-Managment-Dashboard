@@ -17,7 +17,7 @@ export const load: PageServerLoad = ({ url }) => {
 
 export const actions: Actions = {
 	create: action((_e, data) => {
-		createProject(str(data, 'name', 'Projekt'), strOrNull(data, 'stack') ?? 'TBD');
+		createProject(str(data, 'name', 'Project'), strOrNull(data, 'stack') ?? 'TBD');
 	}),
 	advance: action((_e, data) => {
 		advanceProjectStatus(int(data, 'id'));

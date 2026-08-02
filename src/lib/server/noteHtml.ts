@@ -2,15 +2,15 @@ import { generateHTML } from '@tiptap/html/server';
 import { editorExtensions } from '$lib/editor/extensions';
 import { parseDoc, type DocNode } from '$lib/editor/doc';
 
-/** Serverseitiges HTML einer Notiz: steht schon im ersten Paint im Editor-Feld,
- *  damit die Notiz ohne JS lesbar bleibt und nichts nachspringt. */
+/** Server-rendered HTML of a note: it is in the editor field from the first
+ *  paint, so the note stays readable without JS and nothing jumps on hydrate. */
 export function noteHtml(doc: string, fallbackText: string): string {
 	const json = parseDoc(doc, fallbackText);
 	try {
 		return generateHTML(json as Record<string, unknown>, editorExtensions());
 	} catch {
-		// Unbekannter Knoten (z. B. nach einem Schema-Rückbau) — lieber der
-		// Klartext als eine kaputte Seite.
+		// Unknown node (e.g. after a schema rollback) — plain text beats a
+		// broken page.
 		return `<p>${escapeHtml(fallbackText)}</p>`;
 	}
 }

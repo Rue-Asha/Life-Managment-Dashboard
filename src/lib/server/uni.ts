@@ -61,12 +61,12 @@ export function toggleSemesterArchived(id: number): void {
 		.run(id);
 }
 
-/** Semester samt Kursen und deren Aufgaben löschen (ON DELETE CASCADE). */
+/** Delete a semester along with its courses and their tasks (ON DELETE CASCADE). */
 export function deleteSemester(id: number): void {
 	getDb().prepare('DELETE FROM semesters WHERE id = ?').run(id);
 }
 
-// ── Kurse ───────────────────────────────────────────────────────────────────
+// ── Courses ─────────────────────────────────────────────────────────────────
 
 export function listCourses(semesterId?: number): Course[] {
 	if (semesterId !== undefined) {
@@ -103,7 +103,7 @@ export function deleteCourse(id: number): void {
 	getDb().prepare('DELETE FROM courses WHERE id = ?').run(id);
 }
 
-// ── Uni-Aufgaben ────────────────────────────────────────────────────────────
+// ── Uni tasks ───────────────────────────────────────────────────────────────
 
 export function listUniTasks(semesterId?: number): (UniTask & { semester_id: number })[] {
 	if (semesterId !== undefined) {
@@ -172,11 +172,11 @@ export function toggleUniDone(id: number): void {
 		.run(id);
 }
 
-/** Typ-Badge klick: VL → EXC → OTH → VL. */
+/** Type badge click: LEC → EXC → OTH → LEC. */
 export function cycleUniType(id: number): void {
 	getDb()
 		.prepare(
-			`UPDATE uni_tasks SET type = CASE type WHEN 'VL' THEN 'EXC' WHEN 'EXC' THEN 'OTH' ELSE 'VL' END
+			`UPDATE uni_tasks SET type = CASE type WHEN 'LEC' THEN 'EXC' WHEN 'EXC' THEN 'OTH' ELSE 'LEC' END
 			 WHERE id = ?`
 		)
 		.run(id);
@@ -186,7 +186,7 @@ export function deleteUniTask(id: number): void {
 	getDb().prepare('DELETE FROM uni_tasks WHERE id = ?').run(id);
 }
 
-// ── Lernsession ─────────────────────────────────────────────────────────────
+// ── Study session ───────────────────────────────────────────────────────────
 
 export interface SessionEntry {
 	task_id: number;
@@ -197,8 +197,8 @@ export function listSession(): SessionEntry[] {
 	return getDb().prepare('SELECT * FROM uni_session').all() as unknown as SessionEntry[];
 }
 
-/** Stern-Klick: Aufgabe in die heutige Session aufnehmen bzw. entfernen.
- *  Wie im Design startet ein Klick an einem neuen Tag eine frische Session. */
+/** Star click: add a task to today's session or take it out again. As in the
+ *  design, a click on a new day starts a fresh session. */
 export function toggleSession(taskId: number, today: string): void {
 	const db = getDb();
 	const dates = db.prepare('SELECT DISTINCT date FROM uni_session').all() as unknown as {
@@ -219,7 +219,7 @@ export function clearSession(): void {
 	getDb().prepare('DELETE FROM uni_session').run();
 }
 
-/** Erledigte Aufgaben aus der Session entfernen. */
+/** Remove finished tasks from the session. */
 export function sweepSession(): void {
 	getDb()
 		.prepare(

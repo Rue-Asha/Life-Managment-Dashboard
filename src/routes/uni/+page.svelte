@@ -15,8 +15,8 @@
 		data.semesters.filter((s) => data.showArchived || s.status === 'active')
 	);
 
-	// Anlege-Leiste Aufgaben: Typ & Prio zyklisch.
-	let newType: UniType = $state('VL');
+	// Task add bar: cycle through type and priority.
+	let newType: UniType = $state('LEC');
 	let newPrio = $state(2);
 	const cycleNewType = () => (newType = UNI_TYPES[(UNI_TYPES.indexOf(newType) + 1) % UNI_TYPES.length]);
 	const cycleNewPrio = () => (newPrio = newPrio === 3 ? 1 : newPrio + 1);
@@ -24,10 +24,10 @@
 	let addSemForm: HTMLFormElement | undefined = $state();
 	let addSemName = $state('');
 	function promptSemester() {
-		const name = (window.prompt('Semester, z. B. WS 2026/27') || '').trim();
+		const name = (window.prompt('Semester, e.g. WS 2026/27') || '').trim();
 		if (!name) return;
 		addSemName = name;
-		// Warten bis der Wert im DOM steht, dann abschicken.
+		// Wait until the value is in the DOM, then submit.
 		queueMicrotask(() => addSemForm?.requestSubmit());
 	}
 
@@ -35,7 +35,7 @@
 		const p = new URLSearchParams();
 		if (data.view !== 'courses') p.set('view', data.view!);
 		if (data.semId != null) p.set('sem', String(data.semId));
-		if (data.showArchived) p.set('archiv', '1');
+		if (data.showArchived) p.set('archive', '1');
 		for (const [k, v] of Object.entries(params)) {
 			if (v === null) p.delete(k);
 			else p.set(k, v);
@@ -96,14 +96,14 @@
 				href={semHref({ sem: String(sm.id) })}
 			>
 				{sm.name}
-				<span class="n">{archived ? 'ARCHIV' : pad(data.courses.filter((c) => c.semester_id === sm.id).length)}</span>
+				<span class="n">{archived ? 'ARCHIVED' : pad(data.courses.filter((c) => c.semester_id === sm.id).length)}</span>
 			</a>
 			<form method="POST" action="?/archiveSemester" use:enhance style="display:contents">
 				<input type="hidden" name="id" value={sm.id} />
 				<button
 					class="btn-text"
 					style="border-left:1px solid var(--line);padding:6px 10px;font-size:9px;letter-spacing:0.12em"
-					title="archivieren">{archived ? '↺' : 'ARCH.'}</button
+					title="archive">{archived ? '↺' : 'ARCH.'}</button
 				>
 			</form>
 		</span>
@@ -115,8 +115,8 @@
 	<a
 		class="btn-text"
 		style="margin-left:auto;letter-spacing:0.16em;font-size:9px"
-		href={semHref({ archiv: data.showArchived ? null : '1' })}
-		>{data.showArchived ? 'ARCHIV AUSBLENDEN' : 'ARCHIV ANZEIGEN'}</a
+		href={semHref({ archive: data.showArchived ? null : '1' })}
+		>{data.showArchived ? 'HIDE ARCHIVE' : 'SHOW ARCHIVE'}</a
 	>
 	{#if data.semId != null}
 		<form
@@ -125,11 +125,11 @@
 			use:enhance
 			onsubmit={(e) => {
 				const sm = data.semesters.find((s) => s.id === data.semId);
-				if (!window.confirm(`Semester „${sm?.name}“ mit allen Kursen löschen?`)) e.preventDefault();
+				if (!window.confirm(`Delete semester "${sm?.name}" and all its courses?`)) e.preventDefault();
 			}}
 		>
 			<input type="hidden" name="id" value={data.semId} />
-			<button class="btn-text" style="color:var(--faint);letter-spacing:0.16em;font-size:9px">SEMESTER LÖSCHEN</button>
+			<button class="btn-text" style="color:var(--faint);letter-spacing:0.16em;font-size:9px">DELETE SEMESTER</button>
 		</form>
 	{/if}
 </div>
@@ -138,9 +138,9 @@
 	<div style="animation:md-rise 300ms ease both">
 		<form class="addbar" method="POST" action="?/addCourse" use:enhance>
 			<input type="hidden" name="sem" value={data.semId ?? ''} />
-			<input type="text" name="name" placeholder="Neuer Kurs…" required disabled={data.semId == null} />
-			<input class="boxed" name="code" placeholder="kürzel" style="flex:0 1 140px" />
-			<button type="submit" class="btn-primary" disabled={data.semId == null}>Anlegen</button>
+			<input type="text" name="name" placeholder="New course…" required disabled={data.semId == null} />
+			<input class="boxed" name="code" placeholder="code" style="flex:0 1 140px" />
+			<button type="submit" class="btn-primary" disabled={data.semId == null}>Add</button>
 		</form>
 
 		<div class="tile-grid">
@@ -162,26 +162,26 @@
 						<span>{c.docent || '—'}</span>
 						<span>{c.slot || '—'}</span>
 						<span>{c.ects || '—'} ECTS</span>
-						{#if c.grade}<span style="color:{accent}">NOTE {c.grade}</span>{/if}
+						{#if c.grade}<span style="color:{accent}">GRADE {c.grade}</span>{/if}
 					</div>
 					<div class="tile-foot">
-						<span class="tile-next">↳ {next?.text ?? 'nichts offen'}</span>
-						<span class="mono">{open.length} / {ts.length} OFFEN</span>
+						<span class="tile-next">↳ {next?.text ?? 'nothing open'}</span>
+						<span class="mono">{open.length} / {ts.length} OPEN</span>
 					</div>
 				</a>
 			{/each}
 		</div>
 		{#if semCourses.length === 0}
-			<div class="empty-serif" style="padding:26px 0">Noch keine Kurse in diesem Semester.</div>
+			<div class="empty-serif" style="padding:26px 0">No courses in this semester yet.</div>
 		{/if}
 	</div>
 {:else if data.view === 'tasks'}
 	<div style="animation:md-rise 300ms ease both">
 		<div class="chips">
-			<span class="chips-label">[ KURS ]</span>
+			<span class="chips-label">[ COURSE ]</span>
 			<a class="chip" class:on={data.courseFilter === null} href={semHref({ course: null })}>
 				<span class="dot" style="background:transparent"></span>
-				Alle
+				All
 				<span class="n">{pad(semTasks.filter((t) => !t.done).length)}</span>
 			</a>
 			{#each semCourses as c (c.id)}
@@ -200,7 +200,7 @@
 		</div>
 
 		<form class="addbar" method="POST" action="?/addTask" use:enhance>
-			<input type="text" name="text" placeholder="Was ist zu tun?" required />
+			<input type="text" name="text" placeholder="What needs doing?" required />
 			<select name="course" required>
 				{#each semCourses as c (c.id)}
 					<option value={c.id}>{c.name}</option>
@@ -209,13 +209,13 @@
 			<input type="date" name="due" />
 			<input type="hidden" name="type" value={newType} />
 			<input type="hidden" name="prio" value={newPrio} />
-			<button type="button" class="cycle" style="color:{typeColor(newType)}" title="Typ" onclick={cycleNewType}>
+			<button type="button" class="cycle" style="color:{typeColor(newType)}" title="Type" onclick={cycleNewType}>
 				{newType}
 			</button>
 			<button type="button" class="cycle" style="color:{prioColor(newPrio)}" onclick={cycleNewPrio}>
 				{prioLabel(newPrio)}
 			</button>
-			<button type="submit" class="btn-primary" disabled={semCourses.length === 0}>Anlegen</button>
+			<button type="submit" class="btn-primary" disabled={semCourses.length === 0}>Add</button>
 		</form>
 
 		<div style="display:flex;flex-direction:column;gap:26px">
@@ -225,7 +225,7 @@
 						<span class="dot" style="background:{courseColor(g.course.hue)}"></span>
 						<span class="serif-title">{g.course.name}</span>
 						<span class="rule"></span>
-						<span class="meta">{g.items.filter((t) => !t.done).length} OFFEN / {g.items.length}</span>
+						<span class="meta">{g.items.filter((t) => !t.done).length} OPEN / {g.items.length}</span>
 					</div>
 					<div class="list-panel">
 						{#each g.items as t (t.id)}
@@ -233,16 +233,16 @@
 							<div class="row">
 								<form method="POST" action="?/toggle" use:enhance style="display:contents">
 									<input type="hidden" name="id" value={t.id} />
-									<button class="checkbox" class:done={!!t.done} title={t.done ? 'wieder öffnen' : 'erledigt'}></button>
+									<button class="checkbox" class:done={!!t.done} title={t.done ? 'reopen' : 'mark done'}></button>
 								</form>
 								<span class="prio-bar" style="background:{prioColor(t.prio)};cursor:default"></span>
-								<button type="button" class="row-text" class:done={!!t.done} title="Details öffnen" onclick={() => goto(`/uni/tasks/${t.id}`)}>
+								<button type="button" class="row-text" class:done={!!t.done} title="Open details" onclick={() => goto(`/uni/tasks/${t.id}`)}>
 									{t.text}
 								</button>
 								<span class="note-flag">{t.notes.trim() ? '✎' : ''}</span>
 								<form method="POST" action="?/session" use:enhance style="display:contents">
 									<input type="hidden" name="id" value={t.id} />
-									<button class="star-btn" title="zur Session" style="color:{inSession ? 'var(--gold)' : 'var(--faint)'}">
+									<button class="star-btn" title="add to session" style="color:{inSession ? 'var(--gold)' : 'var(--faint)'}">
 										{inSession ? '★' : '☆'}
 									</button>
 								</form>
@@ -251,7 +251,7 @@
 									<button
 										class="badge"
 										style="color:{typeColor(t.type)};background:{typeColor(t.type)}22;letter-spacing:0.14em"
-										title="Typ wechseln">{t.type}</button
+										title="Switch type">{t.type}</button
 									>
 								</form>
 								<span class="due-mono" style="color:{dueColor(t.due, t.done)}">{dueLabel(t.due)}</span>
@@ -261,7 +261,7 @@
 								</form>
 							</div>
 						{:else}
-							<div class="empty">frei</div>
+							<div class="empty">clear</div>
 						{/each}
 					</div>
 				</section>
@@ -274,16 +274,16 @@
 			<div class="top">
 				<div>
 					<div class="mono-label">
-						[ LERNSESSION · {sessionDate ? fmtDay(sessionDate).toUpperCase() : 'KEINE SESSION'} ]
+						[ STUDY SESSION · {sessionDate ? fmtDay(sessionDate).toUpperCase() : 'NO SESSION'} ]
 					</div>
-					<div class="count">{pad(sessionTasks.length)} Aufgaben gewählt</div>
+					<div class="count">{pad(sessionTasks.length)} tasks picked</div>
 				</div>
 				<div style="display:flex;gap:8px;align-items:center">
 					<form method="POST" action="?/sweepSession" use:enhance>
-						<button class="btn-ghost" style="color:var(--mut)">ERLEDIGTE ENTFERNEN</button>
+						<button class="btn-ghost" style="color:var(--mut)">SWEEP DONE</button>
 					</form>
 					<form method="POST" action="?/clearSession" use:enhance>
-						<button class="btn-ghost danger" style="color:var(--dim)">SESSION LEEREN</button>
+						<button class="btn-ghost danger" style="color:var(--dim)">CLEAR SESSION</button>
 					</form>
 				</div>
 			</div>
@@ -291,10 +291,10 @@
 				<div style="background:var(--gold);width:{sessionPct}%"></div>
 			</div>
 			<div class="mono-dim" style="letter-spacing:0.14em;font-size:9.5px">
-				{sessionDone} / {sessionTasks.length} ERLEDIGT
+				{sessionDone} / {sessionTasks.length} DONE
 			</div>
 			{#if sessionStale}
-				<div class="stale">↳ SESSION VON EINEM FRÜHEREN TAG</div>
+				<div class="stale">↳ SESSION FROM AN EARLIER DAY</div>
 			{/if}
 		</section>
 
@@ -308,7 +308,7 @@
 							class="checkbox"
 							class:done={!!t.done}
 							style="width:16px;height:16px"
-							title={t.done ? 'wieder öffnen' : 'erledigt'}
+							title={t.done ? 'reopen' : 'mark done'}
 						></button>
 					</form>
 					<span class="prio-bar" style="background:{prioColor(t.prio)};height:17px"></span>
@@ -322,12 +322,12 @@
 					<span class="due-mono" style="color:{dueColor(t.due, t.done)}">{dueLabel(t.due)}</span>
 					<form method="POST" action="?/session" use:enhance style="display:contents">
 						<input type="hidden" name="id" value={t.id} />
-						<button class="x-btn" title="aus Session entfernen">✕</button>
+						<button class="x-btn" title="remove from session">✕</button>
 					</form>
 				</div>
 			{:else}
 				<div class="empty-serif" style="padding:26px 20px">
-					Noch nichts gewählt — markiere Aufgaben mit ☆ in der Aufgabenliste.
+					Nothing picked yet — star tasks with ☆ in the task list.
 				</div>
 			{/each}
 		</div>

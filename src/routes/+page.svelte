@@ -15,7 +15,7 @@
 <div class="stats-grid">
 	<div class="stat">
 		<div class="num">{pad(data.stats.openTasks)}</div>
-		<div class="lbl">OFFENE AUFGABEN</div>
+		<div class="lbl">OPEN TASKS</div>
 	</div>
 	<div class="stat">
 		<div class="num">{pad(data.stats.uniOpen)}</div>
@@ -23,19 +23,19 @@
 	</div>
 	<div class="stat">
 		<div class="num">{pad(data.stats.activeProjects)}</div>
-		<div class="lbl">PROJEKTE AKTIV</div>
+		<div class="lbl">PROJECTS ACTIVE</div>
 	</div>
 	<div class="stat">
 		<div class="num">{pad(data.stats.sessionOpen)}</div>
-		<div class="lbl">IN DER SESSION</div>
+		<div class="lbl">IN SESSION</div>
 	</div>
 </div>
 
 <div class="dash-grid">
 	<div class="dash-col" style="gap:26px">
 		<div class="dash-head">
-			<span class="h">heute</span>
-			<span class="sub">[ {dayDone} / {data.dayTodos.length} ERLEDIGT ]</span>
+			<span class="h">today</span>
+			<span class="sub">[ {dayDone} / {data.dayTodos.length} DONE ]</span>
 		</div>
 		<div style="display:flex;flex-direction:column">
 			{#each data.dayTodos as t (t.id)}
@@ -46,7 +46,7 @@
 							class="checkbox"
 							class:done={!!t.done}
 							style="width:14px;height:14px"
-							title={t.done ? 'wieder öffnen' : 'erledigt'}
+							title={t.done ? 'reopen' : 'mark done'}
 						></button>
 					</form>
 					<span
@@ -58,12 +58,12 @@
 					<span class="due" style="color:{dueColor(t.due, t.done)}">{dueLabel(t.due).toUpperCase()}</span>
 				</div>
 			{:else}
-				<div class="empty-serif" style="font-size:20px">Nichts geplant. Selten.</div>
+				<div class="empty-serif" style="font-size:20px">Nothing planned. Rare.</div>
 			{/each}
 		</div>
 
 		<div class="dash-head" style="margin-top:16px">
-			<span class="h">fristen</span>
+			<span class="h">deadlines</span>
 			<span class="rule"></span>
 		</div>
 		<div style="display:flex;flex-direction:column">
@@ -75,14 +75,14 @@
 					<span class="due" style="color:{dueColor(dl.due, false)}">{dueLabel(dl.due).toUpperCase()}</span>
 				</a>
 			{:else}
-				<div class="empty-serif" style="font-size:18px">Keine offenen Fristen.</div>
+				<div class="empty-serif" style="font-size:18px">No open deadlines.</div>
 			{/each}
 		</div>
 	</div>
 
 	<div class="dash-col">
 		<div class="plate">
-			<ImageSlot slot="dash-plate" placeholder="Bild — Stimmung des Monats" has={slots.has('dash-plate')} />
+			<ImageSlot slot="dash-plate" placeholder="Image — mood of the month" has={slots.has('dash-plate')} />
 			<div class="plate-shade"></div>
 		</div>
 		<div class="plate-caption">
@@ -94,14 +94,14 @@
 
 <div class="quote">
 	<span class="mark">“</span>
-	<p>Alles, was ich zweimal manuell mache, gehört in ein Skript.</p>
-	<div class="src">— JOURNAL, WOCHE 31</div>
+	<p>Anything I do manually twice belongs in a script.</p>
+	<div class="src">— JOURNAL, WEEK 31</div>
 </div>
 
 <div class="dash-grid-2">
 	<div class="dash-col">
 		<div class="dash-head">
-			<span class="h">projekte</span>
+			<span class="h">projects</span>
 			<span class="rule"></span>
 		</div>
 		{#each data.activeProjectRows as p (p.id)}
@@ -115,13 +115,13 @@
 				</div>
 			</a>
 		{:else}
-			<div class="empty-serif">Kein aktives Projekt.</div>
+			<div class="empty-serif">No active project.</div>
 		{/each}
 	</div>
 
 	<div class="dash-col">
 		<div class="dash-head">
-			<span class="h">zuletzt notiert</span>
+			<span class="h">recently noted</span>
 			<span class="rule"></span>
 		</div>
 		{#each data.recentNotes as n (n.id)}
@@ -133,7 +133,7 @@
 				<div class="excerpt">{n.excerpt}</div>
 			</a>
 		{:else}
-			<div class="empty-serif">Noch nichts notiert.</div>
+			<div class="empty-serif">Nothing noted yet.</div>
 		{/each}
 	</div>
 </div>

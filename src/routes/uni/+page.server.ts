@@ -34,7 +34,7 @@ export const load: PageServerLoad = ({ url }) => {
 		view: VIEWS.includes(rawView as (typeof VIEWS)[number]) ? rawView : 'courses',
 		semesters,
 		semId: sem?.id ?? null,
-		showArchived: url.searchParams.get('archiv') === '1',
+		showArchived: url.searchParams.get('archive') === '1',
 		courseFilter: rawCourse && rawCourse !== 'all' ? Number(rawCourse) : null,
 		courses: listCourses(),
 		uniTasks: listUniTasks(),
@@ -54,12 +54,12 @@ export const actions: Actions = {
 		deleteSemester(int(data, 'id'));
 	}),
 	addCourse: action((_e, data) => {
-		createCourse(int(data, 'sem'), str(data, 'name', 'Kurs'), strOrNull(data, 'code') ?? '');
+		createCourse(int(data, 'sem'), str(data, 'name', 'Course'), strOrNull(data, 'code') ?? '');
 	}),
 	addTask: action((_e, data) => {
 		createUniTask({
 			courseId: int(data, 'course'),
-			text: str(data, 'text', 'Aufgabe'),
+			text: str(data, 'text', 'Task'),
 			due: strOrNull(data, 'due'),
 			prio: int(data, 'prio'),
 			type: oneOf(data, 'type', UNI_TYPES)

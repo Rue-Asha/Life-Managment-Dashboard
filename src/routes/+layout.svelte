@@ -23,75 +23,75 @@
 	}
 
 	const hour = new Date().getHours();
-	const greeting = hour < 11 ? 'Guten Morgen.' : hour < 18 ? 'Guten Tag.' : 'Guten Abend.';
+	const greeting = hour < 11 ? 'Good morning.' : hour < 18 ? 'Good afternoon.' : 'Good evening.';
 
 	const MODULES: Module[] = [
 		{
 			id: 'dashboard',
 			href: '/',
 			num: '01',
-			label: 'Übersicht',
-			kicker: '[ ÜBERSICHT ]',
+			label: 'Overview',
+			kicker: '[ OVERVIEW ]',
 			spine: 'YUME NO SEKAI',
-			line: 'Ein ruhiger Kosmos.',
+			line: 'A quiet cosmos.',
 			title: greeting
 		},
 		{
 			id: 'todo',
 			href: '/tasks',
 			num: '02',
-			label: 'Aufgaben',
-			kicker: '[ AUFGABEN ]',
+			label: 'Tasks',
+			kicker: '[ TASKS ]',
 			spine: 'SHIZUKA NA UCHU',
-			line: 'Woche, Tag, Board.',
-			title: 'Was ansteht'
+			line: 'Week, day, board.',
+			title: "What's up"
 		},
 		{
 			id: 'uni',
 			href: '/uni',
 			num: '03',
 			label: 'Uni',
-			kicker: '[ STUDIUM ]',
+			kicker: '[ STUDIES ]',
 			spine: 'GAKUMON NO MICHI',
-			line: 'Semester & Kurse.',
-			title: 'Studium'
+			line: 'Semesters & courses.',
+			title: 'Studies'
 		},
 		{
 			id: 'projects',
 			href: '/projects',
 			num: '04',
-			label: 'Projekte',
-			kicker: '[ IT-PROJEKTE ]',
+			label: 'Projects',
+			kicker: '[ IT PROJECTS ]',
 			spine: 'MIRAI SAGASHITE',
-			line: 'Was gebaut wird.',
-			title: 'Projekte'
+			line: 'What gets built.',
+			title: 'Projects'
 		},
 		{
 			id: 'notes',
 			href: '/notes',
 			num: '05',
-			label: 'Notizen',
-			kicker: '[ ARCHIV ]',
+			label: 'Notes',
+			kicker: '[ ARCHIVE ]',
 			spine: 'HOSHI NO KIOKU',
-			line: 'Gedächtnis der Sterne.',
-			title: 'Notizen'
+			line: 'Memory of the stars.',
+			title: 'Notes'
 		}
 	];
 
 	const VIEWS: Record<string, { id: string; label: string }[]> = {
 		'/tasks': [
-			{ id: 'day', label: 'Heute' },
-			{ id: 'week', label: 'Woche' },
+			{ id: 'day', label: 'Today' },
+			{ id: 'week', label: 'Week' },
 			{ id: 'board', label: 'Board' },
-			{ id: 'all', label: 'Alles' }
+			{ id: 'all', label: 'All' }
 		],
 		'/uni': [
-			{ id: 'courses', label: 'Kurse' },
-			{ id: 'tasks', label: 'Aufgaben' },
+			{ id: 'courses', label: 'Courses' },
+			{ id: 'tasks', label: 'Tasks' },
 			{ id: 'session', label: 'Session' }
 		],
 		'/projects': [
-			{ id: 'tiles', label: 'Kacheln' },
+			{ id: 'tiles', label: 'Tiles' },
 			{ id: 'board', label: 'Board' }
 		]
 	};
@@ -117,7 +117,7 @@
 	const pageTitle = $derived((page.data.pageTitle as string | undefined) ?? activeModule.title);
 	const today = todayLabel();
 
-	// Rail-Zustand überlebt Reloads via localStorage.
+	// The rail state survives reloads via localStorage.
 	let railOpen = $state(true);
 	if (browser) {
 		railOpen = localStorage.getItem('md.rail') !== 'closed';
@@ -139,8 +139,8 @@
 	<div class="glow"></div>
 	<div class="frame">
 		<aside class="rail" class:closed={!railOpen}>
-			<button type="button" class="rail-toggle" title="Sidebar ein-/ausklappen" onclick={toggleRail}>
-				{railOpen ? '‹ EINKLAPPEN' : '›'}
+			<button type="button" class="rail-toggle" title="Collapse / expand sidebar" onclick={toggleRail}>
+				{railOpen ? '‹ COLLAPSE' : '›'}
 			</button>
 			{#if railOpen}
 				<div class="rail-head">
@@ -148,7 +148,7 @@
 					<a class="rail-brand" href="/">Managment<br /><em>Dashboard</em></a>
 					<div class="barcode"></div>
 					<div class="rail-mood">
-						<ImageSlot slot="rail-mood" placeholder="Mood / Bild" has={slots.has('rail-mood')} />
+						<ImageSlot slot="rail-mood" placeholder="Mood / image" has={slots.has('rail-mood')} />
 						<div class="mood-shade"></div>
 						<div class="mood-tag">MIRAI / 未来</div>
 					</div>
@@ -176,7 +176,7 @@
 				<div class="hero">
 					<ImageSlot
 						slot={`hero-${activeModule.id}`}
-						placeholder={`Bild hierher ziehen — ${activeModule.label}`}
+						placeholder={`Drag an image here — ${activeModule.label}`}
 						has={slots.has(`hero-${activeModule.id}`)}
 					/>
 					<div class="hero-shade-l"></div>

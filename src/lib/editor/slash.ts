@@ -1,18 +1,23 @@
-/** „/“-Menü wie in Notion. Die Extension liefert nur Zustand nach außen —
- *  gezeichnet wird das Menü von NoteEditor.svelte, damit es zum Design passt. */
+/** Notion-style "/" menu. The extension only reports state outwards — the menu
+ *  itself is drawn by NoteEditor.svelte so it matches the design.
+ *
+ *  Filtering happens in the component, not in the suggestion plugin: the plugin
+ *  resolves `items()` asynchronously and fires onStart with an empty list, so a
+ *  fast "/" + ArrowDown + Enter would land on nothing. Handing the raw query to
+ *  the component keeps the list synchronous and always populated. */
 import { Extension, type Editor, type Range } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
 
 export interface SlashItem {
 	title: string;
 	hint: string;
-	/** zusätzliche Suchbegriffe (deutsch getippt, englisch gedacht) */
+	/** extra search terms, so "table" also matches "grid" */
 	keywords: string;
 	run: (editor: Editor, range: Range) => void;
 }
 
 export interface SlashState {
-	items: SlashItem[];
+	query: string;
 	rect: DOMRect | null;
 	pick: (item: SlashItem) => void;
 }
@@ -20,50 +25,50 @@ export interface SlashState {
 export const SLASH_ITEMS: SlashItem[] = [
 	{
 		title: 'Text',
-		hint: 'Normaler Absatz',
-		keywords: 'absatz paragraph p',
+		hint: 'Plain paragraph',
+		keywords: 'paragraph body p',
 		run: (e, r) => e.chain().focus().deleteRange(r).setParagraph().run()
 	},
 	{
-		title: 'Überschrift 1',
-		hint: 'Große Überschrift',
-		keywords: 'h1 titel heading',
+		title: 'Heading 1',
+		hint: 'Large heading',
+		keywords: 'h1 title big',
 		run: (e, r) => e.chain().focus().deleteRange(r).setNode('heading', { level: 1 }).run()
 	},
 	{
-		title: 'Überschrift 2',
-		hint: 'Abschnitt',
-		keywords: 'h2 heading',
+		title: 'Heading 2',
+		hint: 'Section',
+		keywords: 'h2 subtitle',
 		run: (e, r) => e.chain().focus().deleteRange(r).setNode('heading', { level: 2 }).run()
 	},
 	{
-		title: 'Überschrift 3',
-		hint: 'Unterabschnitt',
-		keywords: 'h3 heading',
+		title: 'Heading 3',
+		hint: 'Subsection',
+		keywords: 'h3 small heading',
 		run: (e, r) => e.chain().focus().deleteRange(r).setNode('heading', { level: 3 }).run()
 	},
 	{
-		title: 'To-do-Liste',
-		hint: 'Kästchen zum Abhaken',
-		keywords: 'todo aufgabe checkbox haken task',
+		title: 'To-do list',
+		hint: 'Checkboxes to tick off',
+		keywords: 'todo task checkbox check',
 		run: (e, r) => e.chain().focus().deleteRange(r).toggleTaskList().run()
 	},
 	{
-		title: 'Aufzählung',
-		hint: 'Punkteliste',
-		keywords: 'liste bullet ul punkte',
+		title: 'Bullet list',
+		hint: 'Unordered list',
+		keywords: 'ul bullets points list',
 		run: (e, r) => e.chain().focus().deleteRange(r).toggleBulletList().run()
 	},
 	{
-		title: 'Nummerierte Liste',
-		hint: 'Schritt für Schritt',
-		keywords: 'ol nummer zahlen ordered',
+		title: 'Numbered list',
+		hint: 'Step by step',
+		keywords: 'ol ordered numbers list',
 		run: (e, r) => e.chain().focus().deleteRange(r).toggleOrderedList().run()
 	},
 	{
-		title: 'Tabelle',
-		hint: '3 × 3 mit Kopfzeile',
-		keywords: 'table raster spalten',
+		title: 'Table',
+		hint: '3 × 3 with header row',
+		keywords: 'grid columns rows',
 		run: (e, r) =>
 			e
 				.chain()
@@ -73,30 +78,37 @@ export const SLASH_ITEMS: SlashItem[] = [
 				.run()
 	},
 	{
-		title: 'Zitat',
-		hint: 'Eingerückter Block',
-		keywords: 'quote blockquote merksatz',
+		title: 'Quote',
+		hint: 'Indented block',
+		keywords: 'blockquote citation',
 		run: (e, r) => e.chain().focus().deleteRange(r).toggleBlockquote().run()
 	},
 	{
 		title: 'Code',
-		hint: 'Monospace-Block',
-		keywords: 'code pre snippet befehl',
+		hint: 'Monospace block',
+		keywords: 'pre snippet command',
 		run: (e, r) => e.chain().focus().deleteRange(r).toggleCodeBlock().run()
 	},
 	{
-		title: 'Trennlinie',
-		hint: 'Horizontaler Strich',
-		keywords: 'hr linie trenner divider',
+		title: 'Divider',
+		hint: 'Horizontal rule',
+		keywords: 'hr line separator break',
 		run: (e, r) => e.chain().focus().deleteRange(r).setHorizontalRule().run()
 	}
 ];
+
+/** Match a query against titles and keywords. Empty query = everything. */
+export function filterSlashItems(query: string): SlashItem[] {
+	const q = query.trim().toLowerCase();
+	if (!q) return SLASH_ITEMS;
+	return SLASH_ITEMS.filter((i) => `${i.title} ${i.keywords}`.toLowerCase().includes(q));
+}
 
 export interface SlashOptions {
 	onOpen: (state: SlashState) => void;
 	onUpdate: (state: SlashState) => void;
 	onClose: () => void;
-	/** true = Taste verbraucht (Menü navigiert), false = Editor macht weiter */
+	/** true = key consumed by the menu, false = the editor handles it */
 	onKeyDown: (event: KeyboardEvent) => boolean;
 }
 
@@ -120,21 +132,17 @@ export const SlashCommands = Extension.create<SlashOptions>({
 				char: '/',
 				allowSpaces: false,
 				startOfLine: false,
-				items: ({ query }) => {
-					const q = query.trim().toLowerCase();
-					if (!q) return SLASH_ITEMS;
-					return SLASH_ITEMS.filter((i) =>
-						`${i.title} ${i.keywords}`.toLowerCase().includes(q)
-					);
-				},
+				// Constant list: the component does the filtering, this only has to
+				// resolve immediately so the plugin never sits in a loading state.
+				items: () => SLASH_ITEMS,
 				command: ({ editor, range, props }) => props.run(editor, range),
 				render: () => {
 					const state = (props: {
-						items: SlashItem[];
+						query: string;
 						clientRect?: (() => DOMRect | null) | null;
 						command: (item: SlashItem) => void;
 					}): SlashState => ({
-						items: props.items,
+						query: props.query,
 						rect: props.clientRect?.() ?? null,
 						pick: props.command
 					});

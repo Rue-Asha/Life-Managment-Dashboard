@@ -12,13 +12,13 @@ import { STATUSES, UNI_TYPES } from '$lib/labels';
 
 export const load: PageServerLoad = ({ params }) => {
 	const task = getUniTask(Number(params.id));
-	if (!task) throw error(404, 'Aufgabe nicht gefunden');
-	return { task, courses: listCourses(), pageTitle: task.text || 'Uni-Aufgabe' };
+	if (!task) throw error(404, 'Task not found');
+	return { task, courses: listCourses(), pageTitle: task.text || 'Uni task' };
 };
 
 export const actions: Actions = {
 	text: action(({ params }, data) => {
-		updateUniTaskField(Number(params.id), 'text', str(data, 'text', 'Aufgabe'));
+		updateUniTaskField(Number(params.id), 'text', str(data, 'text', 'Task'));
 	}),
 	course: action(({ params }, data) => {
 		updateUniTaskField(Number(params.id), 'course_id', int(data, 'course'));

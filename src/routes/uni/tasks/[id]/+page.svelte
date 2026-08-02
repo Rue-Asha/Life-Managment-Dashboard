@@ -17,12 +17,12 @@
 </script>
 
 <div class="detail-bar">
-	<a class="btn-back" href="/uni?view=tasks">← ZURÜCK</a>
+	<a class="btn-back" href="/uni?view=tasks">← BACK</a>
 	<span class="tag" style="color:{courseColor(course?.hue)}">{course?.name ?? '—'}</span>
 	<span class="tag" style="color:{typeColor(t.type)}">{t.type}</span>
 	<span class="tag" style="color:{prioColor(t.prio)}">{prioLabel(t.prio)}</span>
 	<form class="spacer" method="POST" action="?/delete" use:enhance>
-		<button class="btn-text">aufgabe löschen</button>
+		<button class="btn-text">delete task</button>
 	</form>
 </div>
 
@@ -32,13 +32,13 @@
 		<div class="fields">
 			<form method="POST" action="?/text" use:quietEnhance>
 				<label class="field">
-					<span>AUFGABE</span>
+					<span>TASK</span>
 					<input class="title-input" name="text" value={t.text} use:autosave />
 				</label>
 			</form>
 			<form method="POST" action="?/course" use:quietEnhance>
 				<label class="field">
-					<span>KURS</span>
+					<span>COURSE</span>
 					<select name="course" value={String(t.course_id)} style="color:{courseColor(course?.hue)}" use:autosave>
 						{#each data.courses as c (c.id)}
 							<option value={String(c.id)}>{c.name}</option>
@@ -48,7 +48,7 @@
 			</form>
 			<form method="POST" action="?/type" use:quietEnhance>
 				<label class="field">
-					<span>TYP</span>
+					<span>TYPE</span>
 					<select name="type" value={t.type} style="color:{typeColor(t.type)}" use:autosave>
 						{#each UNI_TYPES as ty (ty)}
 							<option value={ty}>{ty}</option>
@@ -58,17 +58,17 @@
 			</form>
 			<form method="POST" action="?/due" use:quietEnhance>
 				<label class="field">
-					<span>FÄLLIG AM</span>
+					<span>DUE</span>
 					<input type="date" name="due" value={t.due ?? ''} use:autosave />
 				</label>
 			</form>
 			<form method="POST" action="?/prio" use:quietEnhance>
 				<label class="field">
-					<span>PRIORITÄT</span>
+					<span>PRIORITY</span>
 					<select name="prio" value={String(t.prio)} style="color:{prioColor(t.prio)}" use:autosave>
-						<option value="1">P1 HOCH</option>
-						<option value="2">P2 MITTEL</option>
-						<option value="3">P3 NIEDRIG</option>
+						<option value="1">P1 HIGH</option>
+						<option value="2">P2 MEDIUM</option>
+						<option value="3">P3 LOW</option>
 					</select>
 				</label>
 			</form>
@@ -86,15 +86,15 @@
 		<form method="POST" action="?/toggle" use:enhance>
 			<button class="toggle-done">
 				<span class="checkbox" class:done={!!t.done}></span>
-				<span>{t.done ? 'erledigt' : 'als erledigt markieren'}</span>
+				<span>{t.done ? 'done' : 'mark as done'}</span>
 			</button>
 		</form>
 	</section>
 
 	<section class="panel">
-		<div class="panel-label">[ NOTIZEN ]</div>
+		<div class="panel-label">[ NOTES ]</div>
 		<form method="POST" action="?/notes" use:quietEnhance>
-			<textarea name="notes" placeholder="Kontext, Teilschritte, Literatur…" value={t.notes} use:autosave
+			<textarea name="notes" placeholder="Context, sub-steps, reading…" value={t.notes} use:autosave
 			></textarea>
 		</form>
 	</section>

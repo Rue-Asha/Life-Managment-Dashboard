@@ -27,7 +27,7 @@ export const load: PageServerLoad = ({ url }) => {
 export const actions: Actions = {
 	create: action((_event, data) => {
 		createTask({
-			text: str(data, 'text', 'Aufgabe'),
+			text: str(data, 'text', 'Task'),
 			cat: oneOf(data, 'cat', CATS),
 			prio: int(data, 'prio'),
 			due: strOrNull(data, 'due')

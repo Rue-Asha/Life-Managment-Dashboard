@@ -14,9 +14,9 @@ import { PROJECT_STATUSES } from '$lib/labels';
 
 export const load: PageServerLoad = ({ params }) => {
 	const project = getProject(Number(params.id));
-	if (!project) throw error(404, 'Projekt nicht gefunden');
+	if (!project) throw error(404, 'Project not found');
 	const tasks = listProjectTasks().filter((t) => t.project_id === project.id);
-	return { project, tasks, pageTitle: project.name || 'Projekt' };
+	return { project, tasks, pageTitle: project.name || 'Project' };
 };
 
 export const actions: Actions = {
@@ -36,7 +36,7 @@ export const actions: Actions = {
 		updateProjectField(Number(params.id), 'notes', strRaw(data, 'notes'));
 	}),
 	addTask: action(({ params }, data) => {
-		addProjectTask(Number(params.id), str(data, 'text', 'Schritt'));
+		addProjectTask(Number(params.id), str(data, 'text', 'Step'));
 	}),
 	toggleTask: action((_e, data) => {
 		toggleProjectTask(int(data, 'id'));

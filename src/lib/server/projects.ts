@@ -54,7 +54,7 @@ export function updateProjectField(
 		.run(value, id);
 }
 
-/** Board-Pfeil: backlog → paused → active → archived → backlog. */
+/** Board arrow: backlog → paused → active → archived → backlog. */
 export function advanceProjectStatus(id: number): void {
 	getDb()
 		.prepare(

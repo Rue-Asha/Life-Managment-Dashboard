@@ -1,12 +1,12 @@
-/* SISTEMA design system v3 — dunkel, editorial, ruhig.
- * Portiert aus dem Design-Artifact „Management Dashboard Design“.
+/* SISTEMA design system v3 — dark, editorial, quiet.
+ * Ported from the design artifact "Management Dashboard Design".
  *
- * Prinzipien:
- *  - Ein dunkler Grund (#0B0A0A), Panels nur eine Nuance heller, 1px-Linien.
- *  - Instrument Serif für Display, Instrument Sans für Text,
- *    JetBrains Mono für [ LABELS ], Zahlen und Meta.
- *  - Mauve (#C79CBA) als Akzent; Gold/Rot/Blau/Grün nur als Bedeutungsfarben.
- *  - Kanten fast eckig (2px Radius), keine Schatten, dafür Scanlines & Glow.
+ * Principles:
+ *  - One dark ground (#0B0A0A), panels only a shade lighter, 1px lines.
+ *  - Instrument Serif for display, Instrument Sans for text,
+ *    JetBrains Mono for [ LABELS ], numbers and meta.
+ *  - Mauve (#C79CBA) as the accent; gold/red/blue/green carry meaning only.
+ *  - Almost square corners (2px radius), no shadows — scanlines and glow instead.
  */
 
 :root {
@@ -133,7 +133,7 @@ a:hover {
 	}
 }
 
-/* ── App-Gerüst ──────────────────────────────────────────────────────────── */
+/* ── App shell ───────────────────────────────────────────────────────────── */
 
 .app {
 	min-height: 100vh;
@@ -329,7 +329,7 @@ a:hover {
 	letter-spacing: 0.14em;
 }
 
-/* ── Main / Hero / Seitenkopf ───────────────────────────────────────────── */
+/* ── Main / hero / page head ────────────────────────────────────────────── */
 
 .main {
 	flex: 1;
@@ -516,7 +516,7 @@ a:hover {
 	color: var(--ink);
 }
 
-/* ── Typo-Utilities ──────────────────────────────────────────────────────── */
+/* ── Type utilities ──────────────────────────────────────────────────────── */
 
 .mono-label {
 	font-family: var(--font-mono);
@@ -707,7 +707,7 @@ button.badge {
 	border: 1px solid currentColor;
 }
 
-/* ── Addbar (Anlege-Leiste) ─────────────────────────────────────────────── */
+/* ── Add bar ─────────────────────────────────────────────────────────────── */
 
 .addbar {
 	display: flex;
@@ -766,7 +766,7 @@ button.badge {
 	background: currentColor;
 }
 
-/* ── Listen-Zeilen ───────────────────────────────────────────────────────── */
+/* ── List rows ───────────────────────────────────────────────────────────── */
 
 .list-panel {
 	background: var(--panel);
@@ -982,7 +982,7 @@ button.badge {
 	color: var(--red);
 }
 
-/* ── Kacheln (Kurse / Projekte) ─────────────────────────────────────────── */
+/* ── Tiles (courses / projects) ─────────────────────────────────────────── */
 
 .tile-grid {
 	display: grid;
@@ -1068,7 +1068,7 @@ button.badge {
 	height: 1px;
 }
 
-/* ── Detail-Seiten ───────────────────────────────────────────────────────── */
+/* ── Detail pages ────────────────────────────────────────────────────────── */
 
 .detail-bar {
 	display: flex;
@@ -1495,7 +1495,7 @@ a.dash-row:hover {
 	white-space: nowrap;
 }
 
-/* ── Notizen ─────────────────────────────────────────────────────────────── */
+/* ── Notes ───────────────────────────────────────────────────────────────── */
 
 .notes-grid {
 	display: grid;
@@ -1690,14 +1690,14 @@ a.dash-row:hover {
 	font-size: 10px;
 	color: var(--dim);
 }
-/* ── Block-Editor (Tiptap) ───────────────────────────────────────────────── */
+/* ── Block editor (Tiptap) ───────────────────────────────────────────────── */
 
 .tt-shell {
 	margin-top: 18px;
 	position: relative;
 }
 
-/* Werkzeugleiste klebt oben, damit sie beim Scrollen in langen Notizen bleibt. */
+/* The toolbar sticks to the top so it stays put while scrolling long notes. */
 .tt-bar {
 	position: sticky;
 	top: 0;
@@ -1852,7 +1852,7 @@ a.dash-row:hover {
 	color: var(--dim);
 }
 
-/* To-do-Liste: eigenes Kästchen im Stil der Aufgaben-Checkboxen. */
+/* To-do list: its own box, styled like the task checkboxes. */
 .tt-content ul[data-type='taskList'] {
 	list-style: none;
 	padding-left: 2px;
@@ -1928,7 +1928,7 @@ a.dash-row:hover {
 	pointer-events: none;
 }
 
-/* Platzhalter im leeren Block (Placeholder-Extension). */
+/* Placeholder inside an empty block (Placeholder extension). */
 .tt-content .is-empty::before {
 	content: attr(data-placeholder);
 	float: left;
@@ -1937,7 +1937,7 @@ a.dash-row:hover {
 	color: var(--faint);
 }
 
-/* Griff zum Verschieben ganzer Blöcke. */
+/* Handle for dragging whole blocks. */
 .tt-drag {
 	position: absolute;
 	width: 18px;
@@ -1966,7 +1966,7 @@ a.dash-row:hover {
 	pointer-events: none;
 }
 
-/* „/“-Menü */
+/* "/" menu */
 .tt-slash {
 	position: fixed;
 	z-index: 60;
@@ -1979,7 +1979,17 @@ a.dash-row:hover {
 	padding: 5px;
 	box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
 }
+.tt-slash-head {
+	font-family: var(--font-mono);
+	font-size: 8.5px;
+	letter-spacing: 0.12em;
+	color: var(--faint);
+	padding: 4px 9px 6px;
+	border-bottom: 1px solid var(--line3);
+	margin-bottom: 4px;
+}
 .tt-slash-item {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	gap: 1px;
@@ -2005,6 +2015,16 @@ a.dash-row:hover {
 	background: color-mix(in srgb, var(--accent) 14%, transparent);
 	color: var(--ink);
 }
+/* The bar makes the keyboard selection unmistakable, even next to a hover. */
+.tt-slash-item.on::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 4px;
+	bottom: 4px;
+	width: 2px;
+	background: var(--accent);
+}
 .tt-slash-item.on .h {
 	color: var(--ink3);
 }
@@ -2023,7 +2043,7 @@ a.dash-row:hover {
 	overflow: hidden;
 }
 
-/* ── Bild-Slots ──────────────────────────────────────────────────────────── */
+/* ── Image slots ─────────────────────────────────────────────────────────── */
 
 .img-slot {
 	position: absolute;
@@ -2121,7 +2141,7 @@ a.dash-row:hover {
 	color: var(--gold);
 }
 
-/* ── Formular-Feedback ───────────────────────────────────────────────────── */
+/* ── Form feedback ───────────────────────────────────────────────────────── */
 
 .form-error {
 	border: 1px solid var(--red);

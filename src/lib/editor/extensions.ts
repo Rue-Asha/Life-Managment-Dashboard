@@ -1,7 +1,7 @@
-/** Eine Extension-Liste für Client-Editor UND Server-Rendering — beide Seiten
- *  müssen dasselbe Schema kennen, sonst weist generateHTML gespeicherte
- *  Dokumente zurück. Rein clientseitige Extensions (Placeholder, Drag-Handle,
- *  Slash-Menü) hängen im Editor-Component dran; sie berühren das Schema nicht. */
+/** One extension list for the client editor AND server rendering — both sides
+ *  must agree on the schema, or generateHTML rejects stored documents. Purely
+ *  client-side extensions (placeholder, drag handle, slash menu) are added in
+ *  the editor component; they do not touch the schema. */
 import StarterKit from '@tiptap/starter-kit';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';

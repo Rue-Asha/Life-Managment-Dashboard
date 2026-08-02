@@ -1,8 +1,8 @@
 import { enhance } from '$app/forms';
 
-/** Auto-Save-Formulare (Detailseiten): Feldänderung schickt das umgebende
- *  Formular ab, ohne die Seite neu zu laden oder Eingabefokus zu verlieren.
- *  Text/Textarea debounced beim Tippen, sofort bei blur/change. */
+/** Auto-save forms (detail pages): changing a field submits the surrounding
+ *  form without reloading the page or losing input focus. Text and textarea
+ *  are debounced while typing, everything else fires straight away. */
 
 export function quietEnhance(node: HTMLFormElement) {
 	return enhance(node, () => async ({ update }) => {

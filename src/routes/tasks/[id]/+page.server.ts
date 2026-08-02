@@ -6,13 +6,13 @@ import { CATS, STATUSES } from '$lib/labels';
 
 export const load: PageServerLoad = ({ params }) => {
 	const task = getTask(Number(params.id));
-	if (!task) throw error(404, 'Aufgabe nicht gefunden');
-	return { task, pageTitle: task.text || 'Aufgabe' };
+	if (!task) throw error(404, 'Task not found');
+	return { task, pageTitle: task.text || 'Task' };
 };
 
 export const actions: Actions = {
 	text: action(({ params }, data) => {
-		updateTaskField(Number(params.id), 'text', str(data, 'text', 'Aufgabe'));
+		updateTaskField(Number(params.id), 'text', str(data, 'text', 'Task'));
 	}),
 	due: action(({ params }, data) => {
 		updateTaskField(Number(params.id), 'due', strOrNull(data, 'due'));

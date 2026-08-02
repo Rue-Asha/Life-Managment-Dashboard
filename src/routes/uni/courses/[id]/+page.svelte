@@ -11,7 +11,7 @@
 </script>
 
 <div class="detail-bar">
-	<a class="btn-back" href="/uni">← ALLE KURSE</a>
+	<a class="btn-back" href="/uni">← ALL COURSES</a>
 	<span class="tag" style="color:{accent}">{data.semester?.name ?? '—'}</span>
 	<form
 		class="spacer"
@@ -19,42 +19,42 @@
 		action="?/delete"
 		use:enhance
 		onsubmit={(e) => {
-			if (!window.confirm(`Kurs „${c.name}“ mit allen Aufgaben löschen?`)) e.preventDefault();
+			if (!window.confirm(`Delete course "${c.name}" and all its tasks?`)) e.preventDefault();
 		}}
 	>
-		<button class="btn-text">kurs löschen</button>
+		<button class="btn-text">delete course</button>
 	</form>
 </div>
 
 <div class="detail-grid">
 	<section class="panel" style="border-top:2px solid {accent}">
-		<div class="panel-label">[ ECKDATEN ]</div>
+		<div class="panel-label">[ KEY FACTS ]</div>
 		<div class="fields">
 			<form method="POST" action="?/name" use:quietEnhance>
 				<label class="field">
-					<span>KURS</span>
+					<span>COURSE</span>
 					<input class="title-input" name="name" value={c.name} use:autosave />
 				</label>
 			</form>
 			<form method="POST" action="?/field" use:quietEnhance>
 				<input type="hidden" name="field" value="code" />
 				<label class="field">
-					<span>KÜRZEL</span>
+					<span>CODE</span>
 					<input class="mono-input" name="value" value={c.code} use:autosave />
 				</label>
 			</form>
 			<form method="POST" action="?/field" use:quietEnhance>
 				<input type="hidden" name="field" value="docent" />
 				<label class="field">
-					<span>DOZENT</span>
+					<span>LECTURER</span>
 					<input name="value" value={c.docent} placeholder="Prof. …" use:autosave />
 				</label>
 			</form>
 			<form method="POST" action="?/field" use:quietEnhance>
 				<input type="hidden" name="field" value="slot" />
 				<label class="field">
-					<span>TERMIN / RAUM</span>
-					<input name="value" value={c.slot} placeholder="Di 10:15 · H12" use:autosave />
+					<span>SLOT / ROOM</span>
+					<input name="value" value={c.slot} placeholder="Tue 10:15 · H12" use:autosave />
 				</label>
 			</form>
 			<div class="field-pair">
@@ -68,17 +68,17 @@
 				<form method="POST" action="?/field" use:quietEnhance>
 					<input type="hidden" name="field" value="grade" />
 					<label class="field">
-						<span>NOTE</span>
+						<span>GRADE</span>
 						<input class="mono-input" name="value" value={c.grade} placeholder="—" use:autosave />
 					</label>
 				</form>
 			</div>
 			<form method="POST" action="?/hue" use:quietEnhance>
 				<label class="field">
-					<span>FARBE</span>
+					<span>COLOUR</span>
 					<select name="hue" value={String(c.hue)} style="color:{accent};border-color:{accent}" use:autosave>
 						{#each COURSE_HUES as _, i (i)}
-							<option value={String(i)}>FARBE {i + 1}</option>
+							<option value={String(i)}>COLOUR {i + 1}</option>
 						{/each}
 					</select>
 				</label>
@@ -87,7 +87,7 @@
 	</section>
 
 	<section class="panel">
-		<div class="panel-label">[ AUFGABEN ]</div>
+		<div class="panel-label">[ TASKS ]</div>
 		<div class="check-list">
 			{#each data.tasks as t (t.id)}
 				<div class="check-row">
@@ -97,7 +97,7 @@
 							class="checkbox"
 							class:done={!!t.done}
 							style="width:14px;height:14px"
-							title={t.done ? 'wieder öffnen' : 'erledigt'}
+							title={t.done ? 'reopen' : 'mark done'}
 						></button>
 					</form>
 					<button
@@ -112,17 +112,17 @@
 				</div>
 			{:else}
 				<div style="padding:10px 0;color:var(--dim);font-size:13px;font-style:italic">
-					keine Aufgaben für diesen Kurs
+					no tasks for this course
 				</div>
 			{/each}
 		</div>
 
-		<div class="panel-label spaced">[ NOTIZEN ]</div>
+		<div class="panel-label spaced">[ NOTES ]</div>
 		<form method="POST" action="?/field" use:quietEnhance>
 			<input type="hidden" name="field" value="notes" />
 			<textarea
 				name="value"
-				placeholder="Prüfungsform, Literatur, Mitschriften…"
+				placeholder="Exam format, reading, lecture notes…"
 				style="min-height:300px"
 				value={c.notes}
 				use:autosave

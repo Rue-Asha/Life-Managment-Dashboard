@@ -1,6 +1,6 @@
 <script lang="ts">
-	/** Bild-Slot nach Design: leerer Platzhalter, Bild per Klick oder Drag&Drop.
-	 *  Dateien landen über PUT /api/images/[slot] im IMAGES_DIR des Servers. */
+	/** Image slot per the design: empty placeholder, image by click or drag&drop.
+	 *  Files go to the server's IMAGES_DIR via PUT /api/images/[slot]. */
 	let {
 		slot,
 		placeholder = 'Bild',
@@ -12,7 +12,7 @@
 	let dragging = $state(false);
 	let fileInput: HTMLInputElement | undefined = $state();
 
-	// svelte-ignore state_referenced_locally -- Startwert bewusst festgehalten
+	// svelte-ignore state_referenced_locally -- initial value held on purpose
 	let lastSlot = $state(slot);
 	$effect(() => {
 		if (slot !== lastSlot) {

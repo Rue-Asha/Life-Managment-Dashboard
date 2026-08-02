@@ -1,76 +1,80 @@
-# Life Management Dashboard („SISTEMA“)
+# Life Management Dashboard ("SISTEMA")
 
-Selbstgehosteter Personal Hub im Homelab. Seit dem Redesign 08/2026 ist das
-Design-Artifact „Management Dashboard Design“ die Single Source of Truth:
-fünf Module — **Übersicht, Aufgaben, Uni, Projekte, Notizen** — in einem
-dunklen, editorialen Design (Instrument Serif/Sans + JetBrains Mono).
-Finanzen, Curriculum, Review, Suche und die Kalender-Agenda wurden entfernt
-(die alten Finanz-/Curriculum-Tabellen bleiben in der DB erhalten, haben aber
-keine UI mehr).
+Self-hosted personal hub running in the homelab. Since the 08/2026 redesign the
+design artifact "Management Dashboard Design" is the single source of truth:
+five modules — **Overview, Tasks, Uni, Projects, Notes** — in a dark, editorial
+design (Instrument Serif/Sans + JetBrains Mono). Finance, curriculum, review,
+search and the calendar agenda were removed (the old finance and curriculum
+tables stay in the database, they just have no UI any more).
 
 ## Stack
 
-- **SvelteKit** (Svelte 5, `adapter-node`) — eine Sprache, ein Prozess
-- **SQLite** über Nodes eingebautes `node:sqlite` (Node ≥ 22, kein C-Toolchain)
-- Kein CSS-Framework; handgeschriebenes Design-System in `src/app.css`
-  (Tokens + Komponentenklassen, portiert aus dem Artifact)
-- Schriften self-hosted via Fontsource (kein CDN)
+- **SvelteKit** (Svelte 5, `adapter-node`) — one language, one process
+- **SQLite** via Node's built-in `node:sqlite` (Node ≥ 22, no C toolchain)
+- No CSS framework; hand-written design system in `src/app.css`
+  (tokens + component classes, ported from the artifact)
+- Fonts self-hosted via Fontsource (no CDN)
 
-## Module
+## Modules
 
-- **Übersicht** (`/`) — Statistik-Kacheln, Heute-Liste, Uni-Fristen,
-  Monats-Plate, Zitat, aktive Projekte, letzte Notizen
-- **Aufgaben** (`/tasks`) — Views Heute/Woche/Board/Alles, Bereiche
-  Persönlich/Uni/Job, Prio P1–P3, Detailseite mit Notizen
-- **Uni** (`/uni`) — Semester (archivierbar) → Kurse (Farbe, Dozent, Termin,
-  ECTS, Note) → Aufgaben (VL/EXC/OTH) + Lernsession (★ pro Tag)
-- **Projekte** (`/projects`) — Kacheln/Board, Status
-  Backlog/Pausiert/Aktiv/Archiv, Plan-&-Aufgaben-Checkliste, Repo-Link
-- **Notizen** (`/notes`) — Ordner mit Akzentfarben, Zwei-Spalten-Ansicht,
-  Suche, Cover-Bild und ein **Block-Editor** (Tiptap): Überschriften,
-  To-do-Listen, Tabellen, Zitate, Code, Trennlinien — per Toolbar, per
-  Markdown-Kurzschreibweise (`# `, `- `, `[ ] `, ``` ``` ```) oder über das
-  „/“-Menü; Blöcke lassen sich am Griff links verschieben
+- **Overview** (`/`) — stat tiles, today's list, uni deadlines, monthly plate,
+  quote, active projects, recent notes
+- **Tasks** (`/tasks`) — Today/Week/Board/All views, areas Personal/Uni/Job,
+  priorities P1–P3, detail page with notes
+- **Uni** (`/uni`) — semesters (archivable) → courses (colour, lecturer, slot,
+  ECTS, grade) → tasks (LEC/EXC/OTH) + study session (★ per day)
+- **Projects** (`/projects`) — tiles/board, status Backlog/Paused/Active/
+  Archived, plan-and-tasks checklist, repo link
+- **Notes** (`/notes`) — folders with accent colours, two-column layout,
+  search, cover image and a **block editor** (Tiptap): headings, to-do lists,
+  tables, quotes, code, dividers — via the toolbar, via Markdown shorthand
+  (`# `, `- `, `[ ] `, ` ``` `) or through the "/" menu; blocks can be moved by
+  the handle on their left
 
-Bild-Slots (Hero pro Modul, Sidebar-Mood, Dashboard-Plate, Notiz-Cover)
-nehmen Bilder per Klick oder Drag&Drop entgegen; Ablage im `IMAGES_DIR`
-(Dateisystem, kein DB-Eintrag) über `/api/images/[slot]`.
+Image slots (hero per module, sidebar mood, dashboard plate, note cover) accept
+images by click or drag&drop; they are stored in `IMAGES_DIR` (filesystem, no DB
+row) and served through `/api/images/[slot]`.
 
-## Entwicklung
+## Development
 
 ```bash
 npm install
-npm run dev          # liest DATABASE_PATH aus .env (default ./dev.db)
+npm run dev          # reads DATABASE_PATH from .env (default ./dev.db)
 ```
 
-Die Datenbank migriert sich beim ersten Zugriff selbst (Migrationen sind in
-den Server-Build eingebettet). Manuell: `DATABASE_PATH=./dev.db npm run db:migrate`.
+The database migrates itself on first access (migrations are embedded in the
+server build). Manually: `DATABASE_PATH=./dev.db npm run db:migrate`.
 
-**Migrationen sind datums-präfixiert** (`20260713_0001_….sql`) — Absicht:
-beim Deploy übernimmt die App die bestehende budget01-Datenbank in place,
-ohne mit deren `schema_migrations`-Einträgen zu kollidieren.
-`20260801_0010_redesign.sql` überführt Tasks/Uni/Notes/Projects best-effort
-ins neue Schema. `20260802_0011_note_doc.sql` ergänzt `notes.doc` für den
-Block-Editor: dort liegt das Tiptap-Dokument als JSON, `notes.body` trägt die
-daraus abgeleitete Klartext-Fassung (Suche, Auszüge, Wortzähler). Notizen ohne
-`doc` werden beim Lesen aus ihrem Klartext aufgebaut — Altbestand geht nicht
-verloren, auch wenn er nie wieder angefasst wird.
+**Migrations are date-prefixed** (`20260713_0001_….sql`) on purpose: on deploy
+the app adopts the existing budget01 database in place, without colliding with
+its `schema_migrations` entries.
 
-## Produktion (Homelab-Deploy)
+- `20260801_0010_redesign.sql` moves tasks/uni/notes/projects to the new schema
+  on a best-effort basis.
+- `20260802_0011_note_doc.sql` adds `notes.doc` for the block editor: the Tiptap
+  document lives there as JSON, while `notes.body` carries the plain text
+  derived from it (search, excerpts, word count). Notes without a `doc` are
+  rebuilt from their plain text on read — nothing is lost, even if an old note
+  is never touched again.
+- `20260802_0012_english.sql` renames the last German stored value,
+  `uni_tasks.type = 'VL'` (Vorlesung), to `'LEC'`.
 
-Wiederverwendet die bestehende `budget01`-LXC (192.168.0.226): im
-Homelab-Repo `budget_repo_url` auf dieses Repo zeigen lassen,
-`budget_version` pinnen, Deploy-Key registrieren, Playbook laufen lassen.
+## Production (homelab deploy)
+
+Runs on the `life-dashboard01` LXC (192.168.0.223). In the homelab repo, point
+`life_dashboard_repo_url` at this repo, pin `life_dashboard_version`, register
+the deploy key and run the playbook.
 
 ```bash
 npm ci
 npm run build        # → build/
-DATABASE_PATH=/var/lib/budget/app.db npm run db:migrate
-HOST=127.0.0.1 PORT=3000 ORIGIN=http://192.168.0.226 \
-  DATABASE_PATH=/var/lib/budget/app.db IMAGES_DIR=/var/lib/budget/images \
+DATABASE_PATH=/var/lib/life-dashboard/app.db npm run db:migrate
+HOST=127.0.0.1 PORT=3000 ORIGIN=http://192.168.0.223 \
+  DATABASE_PATH=/var/lib/life-dashboard/app.db \
+  IMAGES_DIR=/var/lib/life-dashboard/images \
   node build
 ```
 
-> **Wichtig:** `ORIGIN` muss auf die im Browser verwendete URL zeigen, sonst
-> blockt SvelteKits CSRF-Schutz alle Formular-POSTs. `IMAGES_DIR` sollte auf
-> ein persistentes, beschreibbares Verzeichnis zeigen.
+> **Important:** `ORIGIN` must point at the URL used in the browser, otherwise
+> SvelteKit's CSRF protection blocks every form POST. `IMAGES_DIR` should point
+> at a persistent, writable directory.

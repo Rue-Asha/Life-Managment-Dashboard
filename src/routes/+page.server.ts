@@ -50,7 +50,7 @@ export const load: PageServerLoad = () => {
 			}),
 		recentNotes: notes.slice(0, 4).map((n) => ({
 			id: n.id,
-			title: n.title || 'Ohne Titel',
+			title: n.title || 'Untitled',
 			kind: n.kind,
 			excerpt: n.body.replace(/\n/g, ' ').slice(0, 70)
 		}))

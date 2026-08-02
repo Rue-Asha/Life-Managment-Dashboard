@@ -11,9 +11,9 @@ export interface Note {
 	folder_id: number | null;
 	title: string;
 	kind: NoteKind;
-	/** Klartext-Fassung von `doc` — für Suche, Auszüge und Wortzähler. */
+	/** Plain-text version of `doc` — for search, excerpts and the word count. */
 	body: string;
-	/** Tiptap-Dokument als JSON; leer bei Notizen aus der Klartext-Ära. */
+	/** Tiptap document as JSON; empty for notes from the plain-text era. */
 	doc: string;
 	created_at: string;
 	updated_at: string;
@@ -34,7 +34,7 @@ export function renameFolder(id: number, name: string): void {
 	getDb().prepare('UPDATE note_folders SET name = ? WHERE id = ?').run(name, id);
 }
 
-/** Ordner löschen; enthaltene Notizen wandern nach „Ohne Ordner" (folder_id NULL). */
+/** Delete a folder; the notes in it move to "No folder" (folder_id NULL). */
 export function deleteFolder(id: number): void {
 	getDb().prepare('DELETE FROM note_folders WHERE id = ?').run(id);
 }
@@ -71,8 +71,8 @@ export function updateNoteField(
 		.run(value, id);
 }
 
-/** Dokument speichern; `body` trägt immer die abgeleitete Klartext-Fassung,
- *  damit Suche, Auszüge und Wortzähler ohne JSON-Parsing auskommen. */
+/** Save a document; `body` always carries the derived plain text so search,
+ *  excerpts and the word count get by without parsing JSON. */
 export function updateNoteDoc(id: number, doc: string, plain: string): void {
 	getDb()
 		.prepare(`UPDATE notes SET doc = ?, body = ?, updated_at = datetime('now') WHERE id = ?`)

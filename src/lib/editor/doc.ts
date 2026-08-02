@@ -1,7 +1,7 @@
-/** Konvertierung zwischen Tiptap-Dokument (JSON) und Klartext.
+/** Conversion between a Tiptap document (JSON) and plain text.
  *
- *  Bewusst ohne Tiptap-Import: das läuft auch im Server-Load und in Actions,
- *  wo ProseMirror nichts zu suchen hat. Reines JSON-Walking. */
+ *  Deliberately without a Tiptap import: this also runs in server loads and
+ *  actions, where ProseMirror has no business being. Pure JSON walking. */
 
 export interface DocNode {
 	type?: string;
@@ -12,7 +12,7 @@ export interface DocNode {
 
 export const EMPTY_DOC = '{"type":"doc","content":[{"type":"paragraph"}]}';
 
-/** Klartext aus einem Dokument: ein Block pro Zeile, Listenpunkte markiert. */
+/** Plain text from a document: one block per line, list items marked. */
 export function docToText(doc: DocNode | null | undefined): string {
 	if (!doc) return '';
 	const lines: string[] = [];
@@ -46,7 +46,7 @@ export function docToText(doc: DocNode | null | undefined): string {
 		}
 	};
 
-	// Der erste Block eines Listenpunkts trägt die Markierung, Folgeblöcke nicht.
+	// The first block of a list item carries the marker, later ones do not.
 	const collectBlocks = (kids: DocNode[], marker: string) => {
 		let first = true;
 		for (const kid of kids) {
@@ -62,7 +62,7 @@ export function docToText(doc: DocNode | null | undefined): string {
 	return lines.join('\n').trim();
 }
 
-/** Gegenrichtung: Klartext (Altbestand) als Dokument, Absätze an Leerzeilen. */
+/** The other way round: legacy plain text as a document, split on blank lines. */
 export function docFromText(text: string): DocNode {
 	const blocks = text
 		.split(/\n{2,}/)
@@ -82,13 +82,13 @@ export function docFromText(text: string): DocNode {
 	};
 }
 
-/** Gespeichertes JSON lesen; leer/kaputt → aus dem Klartext aufbauen. */
+/** Read stored JSON; empty or broken → rebuild it from the plain text. */
 export function parseDoc(doc: string, fallbackText: string): DocNode {
 	if (doc) {
 		try {
 			return JSON.parse(doc) as DocNode;
 		} catch {
-			/* fällt unten auf den Klartext zurück */
+			/* falls through to the plain text below */
 		}
 	}
 	return docFromText(fallbackText);

@@ -37,7 +37,7 @@ export function createTask(input: { text: string; cat: Cat; prio: number; due: s
 		.run(input.text, input.cat, input.prio, input.due);
 }
 
-/** Ein Feld einer Aufgabe ändern (Detailseite: Auto-Save pro Feld). */
+/** Change one field of a task (detail page: auto-save per field). */
 export function updateTaskField(
 	id: number,
 	field: 'text' | 'cat' | 'prio' | 'status' | 'due' | 'notes',
@@ -67,7 +67,7 @@ export function toggleDone(id: number): void {
 		.run(id);
 }
 
-/** Board-Pfeil: offen → in Arbeit → erledigt → offen. */
+/** Board arrow: todo → doing → done → todo. */
 export function advanceStatus(id: number): void {
 	getDb()
 		.prepare(
@@ -80,14 +80,14 @@ export function advanceStatus(id: number): void {
 		.run(id);
 }
 
-/** Prio-Balken klick: 3 → 1 → 2 → 3 zyklisch (wie im Design: p===3?1:p+1). */
+/** Priority bar click: 3 → 1 → 2 → 3 in a cycle (per the design: p===3?1:p+1). */
 export function cyclePrio(id: number): void {
 	getDb()
 		.prepare(`UPDATE tasks SET prio = CASE WHEN prio = 3 THEN 1 ELSE prio + 1 END WHERE id = ?`)
 		.run(id);
 }
 
-/** Kategorie-Badge klick: personal → uni → job → personal. */
+/** Category badge click: personal → uni → job → personal. */
 export function cycleCat(id: number): void {
 	getDb()
 		.prepare(

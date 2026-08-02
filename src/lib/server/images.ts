@@ -2,8 +2,8 @@ import { env } from '$env/dynamic/private';
 import fs from 'node:fs';
 import path from 'node:path';
 
-/** Bild-Slots (Hero, Mood, Plate, Notiz-Cover): Dateien im IMAGES_DIR,
- *  benannt nach Slot-Id, MIME-Typ in einer Sidecar-Datei. Kein DB-Eintrag. */
+/** Image slots (hero, mood, plate, note cover): files in IMAGES_DIR, named
+ *  after the slot id, MIME type in a sidecar file. No DB row involved. */
 
 const SLOT_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']);
@@ -47,12 +47,12 @@ export function deleteImage(slot: string): void {
 		try {
 			fs.unlinkSync(p);
 		} catch {
-			// war nicht vorhanden
+			// was not there
 		}
 	}
 }
 
-/** Für den initialen Seitenaufbau: welche Slots haben ein Bild? */
+/** For the initial page render: which slots hold an image? */
 export function existingSlots(): string[] {
 	try {
 		return fs

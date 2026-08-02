@@ -10,7 +10,7 @@
 	const today = todayISO();
 	const weekEnd = isoInDays(7);
 
-	// Anlege-Leiste: Kategorie & Prio zyklisch durchklicken (wie im Design).
+	// Add bar: click through category and priority in a cycle (as in the design).
 	let newCat: Cat = $state('personal');
 	let newPrio = $state(2);
 	const cycleNewCat = () => (newCat = CATS[(CATS.indexOf(newCat) + 1) % CATS.length]);
@@ -39,7 +39,7 @@
 		if (data.view === 'week') {
 			return [
 				{
-					title: 'Nächste 7 Tage',
+					title: 'Next 7 days',
 					accent: '#8E8480',
 					items: catScoped.filter((t) => t.due && t.due <= weekEnd).toSorted(byDue)
 				}
@@ -47,7 +47,7 @@
 		}
 		return [
 			{
-				title: 'Heute & überfällig',
+				title: 'Today & overdue',
 				accent: '#8E8480',
 				items: catScoped
 					.filter((t) => t.due === today || (t.due && t.due < today && !t.done))
@@ -65,7 +65,7 @@
 	);
 
 	const chips = $derived(
-		[{ id: 'all', label: 'Alle', color: '#EDE7E1', dot: 'transparent' }, ...CATS.map((c) => ({
+		[{ id: 'all', label: 'All', color: '#EDE7E1', dot: 'transparent' }, ...CATS.map((c) => ({
 			id: c as string,
 			label: CAT_META[c].label,
 			color: CAT_META[c].color,
@@ -88,11 +88,11 @@
 	}
 
 	const pad = (n: number) => String(n).padStart(2, '0');
-	const advanceLabel = (s: string) => (s === 'todo' ? '→ arbeit' : s === 'doing' ? '→ fertig' : '↺ offen');
+	const advanceLabel = (s: string) => (s === 'todo' ? '→ doing' : s === 'doing' ? '→ done' : '↺ open');
 </script>
 
 <div class="chips">
-	<span class="chips-label">[ BEREICH ]</span>
+	<span class="chips-label">[ AREA ]</span>
 	{#each chips as c (c.id)}
 		<a
 			class="chip"
@@ -110,7 +110,7 @@
 {#if form?.message}<div class="form-error">{form.message}</div>{/if}
 
 <form class="addbar" method="POST" action="?/create" use:enhance>
-	<input type="text" name="text" placeholder="Was steht an?" required />
+	<input type="text" name="text" placeholder="What needs doing?" required />
 	<input type="date" name="due" />
 	<input type="hidden" name="cat" value={newCat} />
 	<input type="hidden" name="prio" value={newPrio} />
@@ -120,7 +120,7 @@
 	<button type="button" class="cycle" style="color:{prioColor(newPrio)}" onclick={cycleNewPrio}>
 		{prioLabel(newPrio)}
 	</button>
-	<button type="submit" class="btn-primary">Anlegen</button>
+	<button type="submit" class="btn-primary">Add</button>
 </form>
 
 {#if data.view === 'board'}
@@ -144,7 +144,7 @@
 										<button
 											class="badge"
 											style="color:{CAT_META[t.cat].color};background:{CAT_META[t.cat].color}22"
-											title="Bereich wechseln">{CAT_META[t.cat].label.toUpperCase()}</button
+											title="Switch area">{CAT_META[t.cat].label.toUpperCase()}</button
 										>
 									</form>
 									<span class="due-mono" style="color:{dueColor(t.due, t.done)};font-size:9.5px"
@@ -176,20 +176,20 @@
 					<span class="dot" style="background:{g.accent}"></span>
 					<span class="serif-title">{g.title}</span>
 					<span class="rule"></span>
-					<span class="meta">{g.items.filter((t) => !t.done).length} OFFEN / {g.items.length}</span>
+					<span class="meta">{g.items.filter((t) => !t.done).length} OPEN / {g.items.length}</span>
 				</div>
 				<div class="list-panel">
 					{#each g.items as t (t.id)}
 						<div class="row">
 							<form method="POST" action="?/toggle" use:enhance style="display:contents">
 								<input type="hidden" name="id" value={t.id} />
-								<button class="checkbox" class:done={!!t.done} title={t.done ? 'wieder öffnen' : 'erledigt'}></button>
+								<button class="checkbox" class:done={!!t.done} title={t.done ? 'reopen' : 'mark done'}></button>
 							</form>
 							<form method="POST" action="?/prio" use:enhance style="display:contents">
 								<input type="hidden" name="id" value={t.id} />
-								<button class="prio-bar" style="background:{prioColor(t.prio)}" title="Priorität"></button>
+								<button class="prio-bar" style="background:{prioColor(t.prio)}" title="Priority"></button>
 							</form>
-							<button type="button" class="row-text" class:done={!!t.done} title="Details öffnen" onclick={() => goto(`/tasks/${t.id}`)}>
+							<button type="button" class="row-text" class:done={!!t.done} title="Open details" onclick={() => goto(`/tasks/${t.id}`)}>
 								{t.text}
 							</button>
 							<span class="note-flag">{t.notes.trim() ? '✎' : ''}</span>
@@ -198,7 +198,7 @@
 								<button
 									class="badge"
 									style="color:{CAT_META[t.cat].color};background:{CAT_META[t.cat].color}22"
-									title="Bereich wechseln">{CAT_META[t.cat].label.toUpperCase()}</button
+									title="Switch area">{CAT_META[t.cat].label.toUpperCase()}</button
 								>
 							</form>
 							{#if data.view !== 'all'}
@@ -220,7 +220,7 @@
 							</form>
 						</div>
 					{:else}
-						<div class="empty">frei</div>
+						<div class="empty">clear</div>
 					{/each}
 				</div>
 			</section>

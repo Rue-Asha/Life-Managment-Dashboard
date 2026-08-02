@@ -1,10 +1,10 @@
--- Redesign (artifact "Management Dashboard Design"): 5 Module — Übersicht,
--- Aufgaben, Uni, Projekte, Notizen. Finance-/Curriculum-Tabellen bleiben
--- unangetastet (nur die UI entfällt); Volltextsuche & Tiptap-Dokumente entfallen.
+-- Redesign (artifact "Management Dashboard Design"): 5 modules — Overview,
+-- Tasks, Uni, Projects, Notes. The finance and curriculum tables stay untouched
+-- (only their UI is dropped); full-text search and Tiptap documents go away.
 
--- ── Suche entfällt ─────────────────────────────────────────────────────────
--- Trigger zuerst: ALTER TABLE … RENAME parst sonst Trigger, die auf die
--- gelöschte FTS-Tabelle zeigen, und bricht ab.
+-- ── Search goes away ───────────────────────────────────────────────────────
+-- Triggers first: otherwise ALTER TABLE … RENAME re-parses triggers pointing at
+-- the dropped FTS table and aborts.
 DROP TRIGGER IF EXISTS trg_search_tasks_ai;
 DROP TRIGGER IF EXISTS trg_search_tasks_au;
 DROP TRIGGER IF EXISTS trg_search_tasks_ad;
@@ -171,5 +171,5 @@ CREATE TABLE project_tasks (
 );
 CREATE INDEX idx_project_tasks_project ON project_tasks (project_id, sort_order);
 
--- Tiptap-Dokumente entfallen (Inhalte oben nach Klartext kopiert).
+-- Tiptap documents go away (their content was copied to plain text above).
 DROP TABLE documents;

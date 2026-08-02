@@ -25,7 +25,7 @@ export const load: PageServerLoad = ({ url }) => {
 		notes,
 		activeId: active?.id ?? null,
 		active,
-		// Startzustand des Editors: HTML fürs erste Paint, JSON für Tiptap.
+		// Initial editor state: HTML for the first paint, JSON for Tiptap.
 		activeHtml: active ? noteHtml(active.doc, active.body) : '',
 		activeDoc: active ? JSON.stringify(docJson(active.doc, active.body)) : ''
 	};
@@ -33,7 +33,7 @@ export const load: PageServerLoad = ({ url }) => {
 
 export const actions: Actions = {
 	createNote: action((event, data) => {
-		// Neue Notiz landet im Ordner der aktuell offenen Notiz (wie im Design).
+		// A new note lands in the folder of the note currently open (as designed).
 		const currentId = intOrNull(data, 'current');
 		const folderId = currentId ? (getNote(currentId)?.folder_id ?? null) : null;
 		const id = createNote({ title: '', kind: 'journal', folderId });
@@ -48,8 +48,8 @@ export const actions: Actions = {
 		try {
 			parsed = JSON.parse(raw) as DocNode;
 		} catch {
-			// Kaputtes JSON gar nicht erst speichern — lieber die letzte gute
-			// Fassung behalten, als die Notiz zu zerschießen.
+			// Never store broken JSON — keeping the last good version beats
+			// wrecking the note.
 			return;
 		}
 		updateNoteDoc(int(data, 'id'), raw, docToText(parsed));

@@ -1,11 +1,11 @@
 <script lang="ts">
-	/** Block-Editor für Notizen. Das serverseitig gerenderte HTML steht von
-	 *  Anfang an im Feld — ohne JS ist die Notiz also lesbar, mit JS übernimmt
-	 *  Tiptap an Ort und Stelle. Nach außen fällt nur JSON an; der Server leitet
-	 *  daraus den Klartext für Suche, Auszüge und Wortzähler ab. */
-	import { onMount } from 'svelte';
+	/** Block editor for notes. The server-rendered HTML sits in the field from
+	 *  the start — so without JS the note is still readable, and with JS Tiptap
+	 *  takes over in place. Only JSON goes back out; the server derives the plain
+	 *  text for search, excerpts and the word count from it. */
+	import { onMount, tick as svelteTick } from 'svelte';
 	import type { Editor as TiptapEditor } from '@tiptap/core';
-	import type { SlashItem, SlashState } from './slash';
+	import { filterSlashItems, type SlashItem, type SlashState } from './slash';
 
 	let {
 		html,
@@ -15,19 +15,24 @@
 
 	let element: HTMLDivElement | undefined = $state();
 	let editor = $state<TiptapEditor | null>(null);
-	// Zählt jede Transaktion — Toolbar hängt sich dran, um isActive() neu zu lesen.
+	// Counts every transaction — the toolbar hangs off it to re-read isActive().
 	let tick = $state(0);
 
 	let slash = $state<SlashState | null>(null);
 	let slashIndex = $state(0);
+	let slashBox: HTMLDivElement | undefined = $state();
+
+	// Filtering happens here, synchronously, so the list is never empty for a
+	// frame — arrow keys and Enter always have something to land on.
+	const slashItems = $derived(slash ? filterSlashItems(slash.query) : []);
 
 	onMount(() => {
 		let instance: TiptapEditor | undefined;
 		let alive = true;
 
 		(async () => {
-			// Tiptap wird erst nach dem Mount geladen — die Notiz steht schon als
-			// serverseitig gerendertes HTML da, der Editor schiebt sich darüber.
+			// Tiptap only loads after mount — the note is already on screen as
+			// server-rendered HTML, the editor slides in on top.
 			const [
 				{ Editor },
 				{ default: Placeholder },
@@ -45,7 +50,7 @@
 
 			const handle = document.createElement('div');
 			handle.className = 'tt-drag';
-			handle.title = 'Block ziehen';
+			handle.title = 'Drag block';
 			handle.textContent = '⠿';
 
 			element.innerHTML = '';
@@ -55,9 +60,7 @@
 					...editorExtensions(),
 					Placeholder.configure({
 						placeholder: ({ node }) =>
-							node.type.name === 'heading'
-								? 'Überschrift'
-								: 'Schreiben — „/“ für Blöcke'
+							node.type.name === 'heading' ? 'Heading' : 'Write — "/" for blocks'
 					}),
 					DragHandle.configure({ render: () => handle }),
 					SlashCommands.configure({
@@ -67,7 +70,9 @@
 						},
 						onUpdate: (s) => {
 							slash = s;
-							if (slashIndex >= s.items.length) slashIndex = 0;
+							// Keep the highlight in range while the query narrows the list.
+							const n = filterSlashItems(s.query).length;
+							if (slashIndex >= n) slashIndex = Math.max(0, n - 1);
 						},
 						onClose: () => (slash = null),
 						onKeyDown: (event) => handleSlashKey(event)
@@ -88,17 +93,35 @@
 
 	function handleSlashKey(event: KeyboardEvent): boolean {
 		if (!slash) return false;
-		const n = slash.items.length;
-		if (event.key === 'ArrowDown') {
+		const items = filterSlashItems(slash.query);
+		const n = items.length;
+
+		// Ctrl-n / Ctrl-p do the same as the arrows, for the terminal-minded.
+		const down = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n');
+		const up = event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p');
+
+		if (down) {
 			slashIndex = n ? (slashIndex + 1) % n : 0;
+			scrollActiveIntoView();
 			return true;
 		}
-		if (event.key === 'ArrowUp') {
+		if (up) {
 			slashIndex = n ? (slashIndex - 1 + n) % n : 0;
+			scrollActiveIntoView();
+			return true;
+		}
+		if (event.key === 'Home' && n) {
+			slashIndex = 0;
+			scrollActiveIntoView();
+			return true;
+		}
+		if (event.key === 'End' && n) {
+			slashIndex = n - 1;
+			scrollActiveIntoView();
 			return true;
 		}
 		if (event.key === 'Enter' || event.key === 'Tab') {
-			const item = slash.items[slashIndex];
+			const item = items[slashIndex];
 			if (!item) return false;
 			slash.pick(item);
 			return true;
@@ -110,11 +133,16 @@
 		return false;
 	}
 
+	async function scrollActiveIntoView() {
+		await svelteTick();
+		slashBox?.querySelector('.tt-slash-item.on')?.scrollIntoView({ block: 'nearest' });
+	}
+
 	function pick(item: SlashItem) {
 		slash?.pick(item);
 	}
 
-	/** Aktueller Formatzustand — hängt bewusst an `tick`. */
+	/** Current formatting state — deliberately hangs off `tick`. */
 	const st = $derived.by(() => {
 		void tick;
 		const e = editor;
@@ -144,38 +172,38 @@
 	}
 
 	const tools: (Tool | 'sep')[] = [
-		{ label: 'B', title: 'Fett (Strg+B)', key: 'bold', run: (e) => e.chain().focus().toggleBold().run() },
-		{ label: 'I', title: 'Kursiv (Strg+I)', key: 'italic', run: (e) => e.chain().focus().toggleItalic().run() },
-		{ label: 'S', title: 'Durchgestrichen', key: 'strike', run: (e) => e.chain().focus().toggleStrike().run() },
-		{ label: '‹›', title: 'Code (inline)', key: 'code', run: (e) => e.chain().focus().toggleCode().run() },
+		{ label: 'B', title: 'Bold (Ctrl+B)', key: 'bold', run: (e) => e.chain().focus().toggleBold().run() },
+		{ label: 'I', title: 'Italic (Ctrl+I)', key: 'italic', run: (e) => e.chain().focus().toggleItalic().run() },
+		{ label: 'S', title: 'Strikethrough', key: 'strike', run: (e) => e.chain().focus().toggleStrike().run() },
+		{ label: '‹›', title: 'Inline code', key: 'code', run: (e) => e.chain().focus().toggleCode().run() },
 		'sep',
-		{ label: 'H1', title: 'Überschrift 1 — auch „# “', key: 'h1', run: (e) => e.chain().focus().toggleHeading({ level: 1 }).run() },
-		{ label: 'H2', title: 'Überschrift 2 — auch „## “', key: 'h2', run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run() },
-		{ label: 'H3', title: 'Überschrift 3 — auch „### “', key: 'h3', run: (e) => e.chain().focus().toggleHeading({ level: 3 }).run() },
+		{ label: 'H1', title: 'Heading 1 — also "# "', key: 'h1', run: (e) => e.chain().focus().toggleHeading({ level: 1 }).run() },
+		{ label: 'H2', title: 'Heading 2 — also "## "', key: 'h2', run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run() },
+		{ label: 'H3', title: 'Heading 3 — also "### "', key: 'h3', run: (e) => e.chain().focus().toggleHeading({ level: 3 }).run() },
 		'sep',
-		{ label: '☑', title: 'To-do-Liste — auch „[ ] “', key: 'task', run: (e) => e.chain().focus().toggleTaskList().run() },
-		{ label: '•', title: 'Aufzählung — auch „- “', key: 'bullet', run: (e) => e.chain().focus().toggleBulletList().run() },
-		{ label: '1.', title: 'Nummerierte Liste — auch „1. “', key: 'ordered', run: (e) => e.chain().focus().toggleOrderedList().run() },
+		{ label: '☑', title: 'To-do list — also "[ ] "', key: 'task', run: (e) => e.chain().focus().toggleTaskList().run() },
+		{ label: '•', title: 'Bullet list — also "- "', key: 'bullet', run: (e) => e.chain().focus().toggleBulletList().run() },
+		{ label: '1.', title: 'Numbered list — also "1. "', key: 'ordered', run: (e) => e.chain().focus().toggleOrderedList().run() },
 		'sep',
-		{ label: '❝', title: 'Zitat — auch „> “', key: 'quote', run: (e) => e.chain().focus().toggleBlockquote().run() },
-		{ label: '{ }', title: 'Code-Block — auch „``` “', key: 'codeBlock', run: (e) => e.chain().focus().toggleCodeBlock().run() },
-		{ label: '—', title: 'Trennlinie — auch „--- “', run: (e) => e.chain().focus().setHorizontalRule().run() },
-		{ label: '▦', title: 'Tabelle einfügen', key: 'table', run: (e) => e.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() }
+		{ label: '❝', title: 'Quote — also "> "', key: 'quote', run: (e) => e.chain().focus().toggleBlockquote().run() },
+		{ label: '{ }', title: 'Code block — also "``` "', key: 'codeBlock', run: (e) => e.chain().focus().toggleCodeBlock().run() },
+		{ label: '—', title: 'Divider — also "--- "', run: (e) => e.chain().focus().setHorizontalRule().run() },
+		{ label: '▦', title: 'Insert table', key: 'table', run: (e) => e.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() }
 	];
 
 	const tableTools: { label: string; title: string; run: (e: TiptapEditor) => void }[] = [
-		{ label: '+ ZEILE', title: 'Zeile darunter', run: (e) => e.chain().focus().addRowAfter().run() },
-		{ label: '− ZEILE', title: 'Zeile löschen', run: (e) => e.chain().focus().deleteRow().run() },
-		{ label: '+ SPALTE', title: 'Spalte rechts', run: (e) => e.chain().focus().addColumnAfter().run() },
-		{ label: '− SPALTE', title: 'Spalte löschen', run: (e) => e.chain().focus().deleteColumn().run() },
-		{ label: 'KOPFZEILE', title: 'Kopfzeile an/aus', run: (e) => e.chain().focus().toggleHeaderRow().run() },
-		{ label: 'TABELLE ✕', title: 'Tabelle löschen', run: (e) => e.chain().focus().deleteTable().run() }
+		{ label: '+ ROW', title: 'Row below', run: (e) => e.chain().focus().addRowAfter().run() },
+		{ label: '− ROW', title: 'Delete row', run: (e) => e.chain().focus().deleteRow().run() },
+		{ label: '+ COL', title: 'Column right', run: (e) => e.chain().focus().addColumnAfter().run() },
+		{ label: '− COL', title: 'Delete column', run: (e) => e.chain().focus().deleteColumn().run() },
+		{ label: 'HEADER', title: 'Toggle header row', run: (e) => e.chain().focus().toggleHeaderRow().run() },
+		{ label: 'TABLE ✕', title: 'Delete table', run: (e) => e.chain().focus().deleteTable().run() }
 	];
 </script>
 
 <div class="tt-shell">
 	{#if editor && st}
-		<div class="tt-bar" role="toolbar" aria-label="Formatierung">
+		<div class="tt-bar" role="toolbar" aria-label="Formatting">
 			{#each tools as tool, i (i)}
 				{#if tool === 'sep'}
 					<span class="tt-sep"></span>
@@ -191,8 +219,8 @@
 			{/each}
 		</div>
 		{#if st.table}
-			<div class="tt-bar tt-bar-table" role="toolbar" aria-label="Tabelle">
-				<span class="tt-bar-label">[ TABELLE ]</span>
+			<div class="tt-bar tt-bar-table" role="toolbar" aria-label="Table">
+				<span class="tt-bar-label">[ TABLE ]</span>
 				{#each tableTools as tool (tool.label)}
 					<button type="button" class="tt-btn wide" title={tool.title} onclick={() => editor && tool.run(editor)}>
 						{tool.label}
@@ -203,19 +231,22 @@
 	{/if}
 
 	<div class="tt-content" bind:this={element}>
-		<!-- eslint-disable-next-line svelte/no-at-html-tags — eigenes Dokument, serverseitig gerendert -->
+		<!-- eslint-disable-next-line svelte/no-at-html-tags — own document, server-rendered -->
 		{@html html}
 	</div>
 </div>
 
-{#if slash && slash.rect}
+{#if slash}
 	<div
 		class="tt-slash"
-		style="top:{slash.rect.bottom + 6}px;left:{slash.rect.left}px"
+		bind:this={slashBox}
+		style="top:{(slash.rect?.bottom ?? 0) + 6}px;left:{slash.rect?.left ?? 0}px"
 		role="listbox"
+		aria-label="Insert block"
 		tabindex="-1"
 	>
-		{#each slash.items as item, i (item.title)}
+		<div class="tt-slash-head">↑ ↓ TO SELECT · ⏎ TO INSERT · ESC TO CLOSE</div>
+		{#each slashItems as item, i (item.title)}
 			<button
 				type="button"
 				class="tt-slash-item"
@@ -229,7 +260,7 @@
 				<span class="h">{item.hint}</span>
 			</button>
 		{:else}
-			<div class="tt-slash-empty">nichts gefunden</div>
+			<div class="tt-slash-empty">no match</div>
 		{/each}
 	</div>
 {/if}

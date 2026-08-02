@@ -18,10 +18,10 @@
 	}
 	function openLabel(p: Project): string {
 		const ts = tasksOf(p);
-		return `${ts.filter((t) => !t.done).length} / ${ts.length} OFFEN`;
+		return `${ts.filter((t) => !t.done).length} / ${ts.length} OPEN`;
 	}
 	function nextTask(p: Project): string {
-		return tasksOf(p).find((t) => !t.done)?.text ?? 'keine offene Aufgabe';
+		return tasksOf(p).find((t) => !t.done)?.text ?? 'no open task';
 	}
 
 	const groups = $derived(
@@ -36,9 +36,9 @@
 {#if form?.message}<div class="form-error">{form.message}</div>{/if}
 
 <form class="addbar" method="POST" action="?/create" use:enhance>
-	<input type="text" name="name" placeholder="Projektidee…" required />
+	<input type="text" name="name" placeholder="Project idea…" required />
 	<input class="boxed" name="stack" placeholder="stack" style="flex:0 1 180px" />
-	<button type="submit" class="btn-primary">Anlegen</button>
+	<button type="submit" class="btn-primary">Add</button>
 </form>
 
 {#if data.view === 'tiles'}
@@ -79,7 +79,7 @@
 				</div>
 			</section>
 		{:else}
-			<div class="empty-serif">Noch keine Projekte.</div>
+			<div class="empty-serif">No projects yet.</div>
 		{/each}
 	</div>
 {:else}
@@ -111,12 +111,12 @@
 								>
 								<form method="POST" action="?/advance" use:enhance style="display:contents">
 									<input type="hidden" name="id" value={p.id} />
-									<button class="mini-btn" title="Status wechseln">→</button>
+									<button class="mini-btn" title="Advance status">→</button>
 								</form>
 							</div>
 						</div>
 					{:else}
-						<div style="padding:8px 2px;color:var(--dim);font-size:12.5px;font-style:italic">leer</div>
+						<div style="padding:8px 2px;color:var(--dim);font-size:12.5px;font-style:italic">empty</div>
 					{/each}
 				</div>
 			</section>

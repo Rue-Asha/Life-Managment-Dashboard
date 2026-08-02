@@ -26,12 +26,12 @@ export function action<E extends RequestEvent>(
 export function str(data: FormData, name: string, label = name): string {
 	const v = data.get(name);
 	if (typeof v !== 'string' || !v.trim()) {
-		throw new FormError(`Feld „${label}“ fehlt.`);
+		throw new FormError(`Field "${label}" is missing.`);
 	}
 	return v.trim();
 }
 
-/** Wie str, aber erlaubt Leerstrings (Auto-Save von Textfeldern). */
+/** Like str, but allows empty strings (auto-save of text fields). */
 export function strRaw(data: FormData, name: string): string {
 	const v = data.get(name);
 	return typeof v === 'string' ? v : '';
@@ -45,7 +45,7 @@ export function strOrNull(data: FormData, name: string): string | null {
 export function int(data: FormData, name: string): number {
 	const v = Number(data.get(name));
 	if (!Number.isInteger(v)) {
-		throw new FormError(`Feld „${name}“ ist keine Zahl.`);
+		throw new FormError(`Field "${name}" is not a number.`);
 	}
 	return v;
 }
@@ -55,7 +55,7 @@ export function intOrNull(data: FormData, name: string): number | null {
 	if (typeof raw !== 'string' || !raw.trim()) return null;
 	const v = Number(raw);
 	if (!Number.isInteger(v)) {
-		throw new FormError(`Feld „${name}“ ist keine Zahl.`);
+		throw new FormError(`Field "${name}" is not a number.`);
 	}
 	return v;
 }
@@ -63,7 +63,7 @@ export function intOrNull(data: FormData, name: string): number | null {
 export function oneOf<T extends string>(data: FormData, name: string, allowed: readonly T[]): T {
 	const v = String(data.get(name) ?? '');
 	if (!allowed.includes(v as T)) {
-		throw new FormError(`Ungültiger Wert für „${name}“.`);
+		throw new FormError(`Invalid value for "${name}".`);
 	}
 	return v as T;
 }
@@ -76,7 +76,7 @@ export function oneOfOrNull<T extends string>(
 	const v = String(data.get(name) ?? '').trim();
 	if (!v) return null;
 	if (!allowed.includes(v as T)) {
-		throw new FormError(`Ungültiger Wert für „${name}“.`);
+		throw new FormError(`Invalid value for "${name}".`);
 	}
 	return v as T;
 }

@@ -24,12 +24,12 @@
 		return (n.title + n.body).toLowerCase().includes(query);
 	}
 
-	// „Ohne Ordner“ (Inbox) zuerst, danach die angelegten Ordner.
+	// "No folder" (inbox) first, then the folders that were created.
 	const tree = $derived.by(() => {
 		const inbox = {
 			key: 'inbox',
 			id: null as number | null,
-			name: 'Ohne Ordner',
+			name: 'No folder',
 			accent: INBOX_COLOR,
 			canDelete: false,
 			items: data.notes.filter((n) => n.folder_id === null && matches(n))
@@ -52,7 +52,7 @@
 	let folderForm: HTMLFormElement | undefined = $state();
 	let folderName = $state('');
 	function promptFolder() {
-		const name = (window.prompt('Name des Ordners') || '').trim();
+		const name = (window.prompt('Folder name') || '').trim();
 		if (!name) return;
 		folderName = name;
 		queueMicrotask(() => folderForm?.requestSubmit());
@@ -62,7 +62,7 @@
 	let renameId = $state(0);
 	let renameName = $state('');
 	function promptRename(id: number, current: string) {
-		const name = (window.prompt('Ordner umbenennen', current) || '').trim();
+		const name = (window.prompt('Rename folder', current) || '').trim();
 		if (!name) return;
 		renameId = id;
 		renameName = name;
@@ -72,10 +72,10 @@
 	const note = $derived(data.active);
 	const words = $derived(note ? wordCount(note.body) : 0);
 
-	// Editor-Autosave: das Dokument landet in einem versteckten Feld, das Formular
-	// geht entprellt raus. Vor jedem Seitenwechsel wird ausstehender Text sofort
-	// gespeichert — sonst kostet ein schneller Klick auf die nächste Notiz die
-	// letzten Sekunden Tipparbeit.
+	// Editor autosave: the document goes into a hidden field and the form is
+	// submitted debounced. Anything pending is saved right before a navigation —
+	// otherwise a quick click on the next note costs the last few seconds of
+	// typing.
 	let docForm: HTMLFormElement | undefined = $state();
 	let docJson = $state('');
 	let docTimer: ReturnType<typeof setTimeout> | undefined;
@@ -97,11 +97,10 @@
 
 	beforeNavigate(saveDoc);
 
-	// Beim Wechsel auf eine andere Notiz alles Ausstehende fallen lassen: sonst
-	// könnte ein noch laufender Timer den Text der vorigen Notiz unter der neuen
-	// ID speichern. Gesichert wird vorher in beforeNavigate. Die letzte ID liegt
-	// bewusst in einer normalen Variablen — ein neu geladenes `data` allein soll
-	// den Editor nicht zurücksetzen.
+	// Drop anything pending when switching notes: a timer still in flight could
+	// otherwise save the previous note's text under the new id. beforeNavigate
+	// has already flushed it. The last id deliberately lives in a plain variable
+	// — a freshly loaded `data` alone must not reset the editor.
 	let lastNoteId: number | null = null;
 	$effect(() => {
 		const id = note?.id ?? null;
@@ -116,9 +115,9 @@
 <div class="notes-grid">
 	<section class="note-tree">
 		<div class="note-tree-bar">
-			<input type="search" placeholder="suchen…" bind:value={q} />
+			<input type="search" placeholder="search…" bind:value={q} />
 			<button type="button" class="btn-ghost" style="padding:5px 9px;font-size:10px;letter-spacing:normal" onclick={promptFolder}>
-				+ Ordner
+				+ Folder
 			</button>
 			<form bind:this={folderForm} method="POST" action="?/createFolder" use:enhance hidden>
 				<input type="hidden" name="name" value={folderName} />
@@ -129,7 +128,7 @@
 			</form>
 			<form method="POST" action="?/createNote" use:enhance>
 				<input type="hidden" name="current" value={data.activeId ?? ''} />
-				<button class="btn-primary" style="padding:5px 12px;font-size:12px">+ Neu</button>
+				<button class="btn-primary" style="padding:5px 12px;font-size:12px">+ New</button>
 			</form>
 		</div>
 		<div class="note-tree-scroll">
@@ -151,10 +150,10 @@
 						</button>
 						{#if fo.canDelete}
 							<span class="fops">
-								<button type="button" title="umbenennen" onclick={() => promptRename(fo.id!, fo.name)}>✎</button>
+								<button type="button" title="rename" onclick={() => promptRename(fo.id!, fo.name)}>✎</button>
 								<form method="POST" action="?/deleteFolder" use:enhance style="display:contents">
 									<input type="hidden" name="id" value={fo.id} />
-									<button class="danger" title="Ordner löschen">✕</button>
+									<button class="danger" title="Delete folder">✕</button>
 								</form>
 							</span>
 						{/if}
@@ -162,11 +161,11 @@
 					{#if isOpen(fo.key)}
 						{#each fo.items as n (n.id)}
 							<a class="note-item" class:on={n.id === data.activeId} href={`/notes?id=${n.id}`}>
-								<div class="ntitle">{n.title || 'Ohne Titel'}</div>
+								<div class="ntitle">{n.title || 'Untitled'}</div>
 								<div class="nmeta">{NOTE_KIND_LABEL[n.kind]} · {fmtDay(n.updated_at.slice(0, 10))}</div>
 							</a>
 						{:else}
-							<div class="folder-empty">leer</div>
+							<div class="folder-empty">empty</div>
 						{/each}
 					{/if}
 				</div>
@@ -179,28 +178,28 @@
 			{#key note.id}
 				<form method="POST" action="?/title" use:quietEnhance>
 					<input type="hidden" name="id" value={note.id} />
-					<input class="title" name="title" placeholder="Titel" value={note.title} use:autosave />
+					<input class="title" name="title" placeholder="Title" value={note.title} use:autosave />
 				</form>
 				<div class="meta-row">
 					<form method="POST" action="?/move" use:quietEnhance style="display:contents">
 						<input type="hidden" name="id" value={note.id} />
 						<select name="folder" value={note.folder_id == null ? '' : String(note.folder_id)} use:autosave>
-							<option value="">Ohne Ordner</option>
+							<option value="">No folder</option>
 							{#each data.folders as fo (fo.id)}
 								<option value={String(fo.id)}>{fo.name}</option>
 							{/each}
 						</select>
 					</form>
-					<span class="meta">ZULETZT {fmtDay(note.updated_at.slice(0, 10)).toUpperCase()} · {words} WÖRTER</span>
+					<span class="meta">UPDATED {fmtDay(note.updated_at.slice(0, 10)).toUpperCase()} · {words} WORDS</span>
 					<form method="POST" action="?/deleteNote" use:enhance style="margin-left:auto">
 						<input type="hidden" name="id" value={note.id} />
-						<button class="btn-text">löschen</button>
+						<button class="btn-text">delete</button>
 					</form>
 				</div>
 				<div class="note-cover">
 					<ImageSlot
 						slot={`note-cover-${note.id}`}
-						placeholder="Bild zur Notiz"
+						placeholder="Cover image"
 						has={slots.has(`note-cover-${note.id}`)}
 					/>
 					<div class="plate-shade" style="background:linear-gradient(180deg,rgba(11,10,10,0) 55%,rgba(11,10,10,0.6) 100%)"></div>
@@ -212,7 +211,7 @@
 				</form>
 			{/key}
 		{:else}
-			<div class="empty-serif" style="padding:40px 0">Noch keine Notiz — leg mit „+ Neu“ los.</div>
+			<div class="empty-serif" style="padding:40px 0">No notes yet — start with "+ New".</div>
 		{/if}
 	</section>
 </div>

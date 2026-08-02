@@ -1,7 +1,7 @@
--- Brick 2: Alltags-/Orga-Tasks (eigene Datenbank; Uni-Lernaufgaben bekommen
--- mit Brick 3 ihre eigene uni_tasks-Tabelle).
--- Migrationen sind datums-präfixiert, damit sie beim In-Place-Übernehmen der
--- budget01-Datenbank nie mit deren schema_migrations-Einträgen kollidieren.
+-- Brick 2: everyday / organisational tasks (own database; uni study tasks get
+-- their own uni_tasks table with brick 3).
+-- Migrations are date-prefixed so that adopting the budget01 database in place
+-- never collides with its existing schema_migrations entries.
 
 CREATE TABLE tasks (
 	id INTEGER PRIMARY KEY,
