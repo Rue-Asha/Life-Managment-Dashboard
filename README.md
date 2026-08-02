@@ -7,6 +7,10 @@ design (Instrument Serif/Sans + JetBrains Mono). Finance, curriculum, review,
 search and the calendar agenda were removed (the old finance and curriculum
 tables stay in the database, they just have no UI any more).
 
+> **Docs:** the write-up on the design rationale and rebuild lives on the blog
+> — [rue-asha.github.io/projects/life-dashboard](https://rue-asha.github.io/projects/life-dashboard/).
+> This README only covers running and deploying the code.
+
 ## Stack
 
 - **SvelteKit** (Svelte 5, `adapter-node`) — one language, one process
@@ -35,15 +39,36 @@ Image slots (hero per module, sidebar mood, dashboard plate, note cover) accept
 images by click or drag&drop; they are stored in `IMAGES_DIR` (filesystem, no DB
 row) and served through `/api/images/[slot]`.
 
+## Requirements
+
+- Node.js ≥ 22 (for the built-in `node:sqlite` module — no native addons)
+
 ## Development
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev          # reads DATABASE_PATH from .env (default ./dev.db)
 ```
 
 The database migrates itself on first access (migrations are embedded in the
 server build). Manually: `DATABASE_PATH=./dev.db npm run db:migrate`.
+
+Type-check with `npm run check` (or `check:watch`).
+
+## Configuration
+
+Set via `.env` in development, or environment variables in production:
+
+| Variable       | Purpose                                             | Default    |
+| -------------- | ---------------------------------------------------- | ---------- |
+| `DATABASE_PATH` | Path to the SQLite database file                    | `./dev.db` |
+| `IMAGES_DIR`    | Directory for uploaded image slots                  | `./images` |
+| `HOST`          | Bind address (adapter-node, production only)        | —          |
+| `PORT`          | Listen port (adapter-node, production only)         | —          |
+| `ORIGIN`        | Public URL, required for CSRF-safe form POSTs        | —          |
+
+## Migrations
 
 **Migrations are date-prefixed** (`20260713_0001_….sql`) on purpose: on deploy
 the app adopts the existing budget01 database in place, without colliding with
@@ -59,11 +84,15 @@ its `schema_migrations` entries.
 - `20260802_0012_english.sql` renames the last German stored value,
   `uni_tasks.type = 'VL'` (Vorlesung), to `'LEC'`.
 
-## Production (homelab deploy)
+## Deployment
 
-Runs on the `life-dashboard01` LXC (192.168.0.223). In the homelab repo, point
-`life_dashboard_repo_url` at this repo, pin `life_dashboard_version`, register
-the deploy key and run the playbook.
+Runs on the `life-dashboard01` LXC (192.168.0.223), provisioned by the
+`life-dashboard` Ansible role in the [homelab repo](https://github.com/Rue-Asha/Homelab-Managment).
+To deploy: point `life_dashboard_repo_url` at this repo, pin
+`life_dashboard_version` to a tag, register the deploy key and run the
+playbook.
+
+The role expects this build/run contract:
 
 ```bash
 npm ci
