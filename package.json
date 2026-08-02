@@ -1,7 +1,7 @@
 {
 	"name": "life-management-dashboard",
 	"private": true,
-	"version": "1.11.0",
+	"version": "2.1.0",
 	"type": "module",
 	"engines": {
 		"node": ">=22"
@@ -28,6 +28,16 @@
 	"dependencies": {
 		"@fontsource-variable/instrument-sans": "^5.2.5",
 		"@fontsource-variable/jetbrains-mono": "^5.2.5",
-		"@fontsource/instrument-serif": "^5.2.5"
+		"@fontsource/instrument-serif": "^5.2.5",
+		"@tiptap/core": "^3.29.2",
+		"@tiptap/extension-drag-handle": "^3.29.2",
+		"@tiptap/extension-placeholder": "^3.29.2",
+		"@tiptap/extension-table": "^3.29.2",
+		"@tiptap/extension-task-item": "^3.29.2",
+		"@tiptap/extension-task-list": "^3.29.2",
+		"@tiptap/html": "^3.29.2",
+		"@tiptap/pm": "^3.29.2",
+		"@tiptap/starter-kit": "^3.29.2",
+		"@tiptap/suggestion": "^3.29.2"
 	}
 }

@@ -11,7 +11,10 @@ export interface Note {
 	folder_id: number | null;
 	title: string;
 	kind: NoteKind;
+	/** Klartext-Fassung von `doc` — für Suche, Auszüge und Wortzähler. */
 	body: string;
+	/** Tiptap-Dokument als JSON; leer bei Notizen aus der Klartext-Ära. */
+	doc: string;
 	created_at: string;
 	updated_at: string;
 }
@@ -66,6 +69,14 @@ export function updateNoteField(
 	getDb()
 		.prepare(`UPDATE notes SET ${field} = ?, updated_at = datetime('now') WHERE id = ?`)
 		.run(value, id);
+}
+
+/** Dokument speichern; `body` trägt immer die abgeleitete Klartext-Fassung,
+ *  damit Suche, Auszüge und Wortzähler ohne JSON-Parsing auskommen. */
+export function updateNoteDoc(id: number, doc: string, plain: string): void {
+	getDb()
+		.prepare(`UPDATE notes SET doc = ?, body = ?, updated_at = datetime('now') WHERE id = ?`)
+		.run(doc, plain, id);
 }
 
 export function deleteNote(id: number): void {

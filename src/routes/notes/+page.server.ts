@@ -9,8 +9,11 @@ import {
 	listFolders,
 	listNotes,
 	renameFolder,
+	updateNoteDoc,
 	updateNoteField
 } from '$lib/server/notes';
+import { docJson, noteHtml } from '$lib/server/noteHtml';
+import { docToText, type DocNode } from '$lib/editor/doc';
 import { action, int, intOrNull, str, strRaw } from '$lib/server/forms';
 
 export const load: PageServerLoad = ({ url }) => {
@@ -21,7 +24,10 @@ export const load: PageServerLoad = ({ url }) => {
 		folders: listFolders(),
 		notes,
 		activeId: active?.id ?? null,
-		active
+		active,
+		// Startzustand des Editors: HTML fürs erste Paint, JSON für Tiptap.
+		activeHtml: active ? noteHtml(active.doc, active.body) : '',
+		activeDoc: active ? JSON.stringify(docJson(active.doc, active.body)) : ''
 	};
 };
 
@@ -36,8 +42,17 @@ export const actions: Actions = {
 	title: action((_e, data) => {
 		updateNoteField(int(data, 'id'), 'title', strRaw(data, 'title'));
 	}),
-	body: action((_e, data) => {
-		updateNoteField(int(data, 'id'), 'body', strRaw(data, 'body'));
+	doc: action((_e, data) => {
+		const raw = strRaw(data, 'doc');
+		let parsed: DocNode | null = null;
+		try {
+			parsed = JSON.parse(raw) as DocNode;
+		} catch {
+			// Kaputtes JSON gar nicht erst speichern — lieber die letzte gute
+			// Fassung behalten, als die Notiz zu zerschießen.
+			return;
+		}
+		updateNoteDoc(int(data, 'id'), raw, docToText(parsed));
 	}),
 	move: action((_e, data) => {
 		updateNoteField(int(data, 'id'), 'folder_id', intOrNull(data, 'folder'));

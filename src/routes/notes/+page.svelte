@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import ImageSlot from '$lib/ImageSlot.svelte';
+	import NoteEditor from '$lib/editor/NoteEditor.svelte';
 	import { autosave, quietEnhance } from '$lib/autosave';
 	import { INBOX_COLOR, NOTE_KIND_LABEL, folderColor } from '$lib/labels';
+	import { wordCount } from '$lib/editor/doc';
 	import { fmtDay } from '$lib/format';
 	import type { Note } from '$lib/server/notes';
 
@@ -67,7 +70,47 @@
 	}
 
 	const note = $derived(data.active);
-	const words = $derived(note ? note.body.split(/\s+/).filter(Boolean).length : 0);
+	const words = $derived(note ? wordCount(note.body) : 0);
+
+	// Editor-Autosave: das Dokument landet in einem versteckten Feld, das Formular
+	// geht entprellt raus. Vor jedem Seitenwechsel wird ausstehender Text sofort
+	// gespeichert — sonst kostet ein schneller Klick auf die nächste Notiz die
+	// letzten Sekunden Tipparbeit.
+	let docForm: HTMLFormElement | undefined = $state();
+	let docJson = $state('');
+	let docTimer: ReturnType<typeof setTimeout> | undefined;
+	let docDirty = $state(false);
+
+	function saveDoc() {
+		clearTimeout(docTimer);
+		if (!docDirty) return;
+		docDirty = false;
+		docForm?.requestSubmit();
+	}
+
+	function onDocChange(json: string) {
+		docJson = json;
+		docDirty = true;
+		clearTimeout(docTimer);
+		docTimer = setTimeout(saveDoc, 700);
+	}
+
+	beforeNavigate(saveDoc);
+
+	// Beim Wechsel auf eine andere Notiz alles Ausstehende fallen lassen: sonst
+	// könnte ein noch laufender Timer den Text der vorigen Notiz unter der neuen
+	// ID speichern. Gesichert wird vorher in beforeNavigate. Die letzte ID liegt
+	// bewusst in einer normalen Variablen — ein neu geladenes `data` allein soll
+	// den Editor nicht zurücksetzen.
+	let lastNoteId: number | null = null;
+	$effect(() => {
+		const id = note?.id ?? null;
+		if (id === lastNoteId) return;
+		lastNoteId = id;
+		clearTimeout(docTimer);
+		docDirty = false;
+		docJson = '';
+	});
 </script>
 
 <div class="notes-grid">
@@ -162,9 +205,10 @@
 					/>
 					<div class="plate-shade" style="background:linear-gradient(180deg,rgba(11,10,10,0) 55%,rgba(11,10,10,0.6) 100%)"></div>
 				</div>
-				<form method="POST" action="?/body" use:quietEnhance>
+				<form bind:this={docForm} method="POST" action="?/doc" use:quietEnhance>
 					<input type="hidden" name="id" value={note.id} />
-					<textarea name="body" placeholder="Schreiben…" value={note.body} use:autosave></textarea>
+					<input type="hidden" name="doc" value={docJson} />
+					<NoteEditor html={data.activeHtml} doc={data.activeDoc} onchange={onDocChange} />
 				</form>
 			{/key}
 		{:else}

@@ -26,8 +26,11 @@ keine UI mehr).
   ECTS, Note) → Aufgaben (VL/EXC/OTH) + Lernsession (★ pro Tag)
 - **Projekte** (`/projects`) — Kacheln/Board, Status
   Backlog/Pausiert/Aktiv/Archiv, Plan-&-Aufgaben-Checkliste, Repo-Link
-- **Notizen** (`/notes`) — Ordner mit Akzentfarben, Zwei-Spalten-Editor
-  (Klartext), Suche, Cover-Bild
+- **Notizen** (`/notes`) — Ordner mit Akzentfarben, Zwei-Spalten-Ansicht,
+  Suche, Cover-Bild und ein **Block-Editor** (Tiptap): Überschriften,
+  To-do-Listen, Tabellen, Zitate, Code, Trennlinien — per Toolbar, per
+  Markdown-Kurzschreibweise (`# `, `- `, `[ ] `, ``` ``` ```) oder über das
+  „/“-Menü; Blöcke lassen sich am Griff links verschieben
 
 Bild-Slots (Hero pro Modul, Sidebar-Mood, Dashboard-Plate, Notiz-Cover)
 nehmen Bilder per Klick oder Drag&Drop entgegen; Ablage im `IMAGES_DIR`
@@ -47,7 +50,11 @@ den Server-Build eingebettet). Manuell: `DATABASE_PATH=./dev.db npm run db:migra
 beim Deploy übernimmt die App die bestehende budget01-Datenbank in place,
 ohne mit deren `schema_migrations`-Einträgen zu kollidieren.
 `20260801_0010_redesign.sql` überführt Tasks/Uni/Notes/Projects best-effort
-ins neue Schema (Tiptap-Dokumente werden als Klartext übernommen).
+ins neue Schema. `20260802_0011_note_doc.sql` ergänzt `notes.doc` für den
+Block-Editor: dort liegt das Tiptap-Dokument als JSON, `notes.body` trägt die
+daraus abgeleitete Klartext-Fassung (Suche, Auszüge, Wortzähler). Notizen ohne
+`doc` werden beim Lesen aus ihrem Klartext aufgebaut — Altbestand geht nicht
+verloren, auch wenn er nie wieder angefasst wird.
 
 ## Produktion (Homelab-Deploy)
 
