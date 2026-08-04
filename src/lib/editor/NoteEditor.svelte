@@ -13,6 +13,15 @@
 		onchange
 	}: { html: string; doc: string; onchange: (json: string) => void } = $props();
 
+	// The server HTML is the first paint only — from mount on, Tiptap owns this
+	// div. Captured once on purpose: `{@html}` as an element's only child
+	// compiles to `innerHTML = …`, so a later value (any load() rerun while the
+	// note has unsaved edits) would silently wipe the live editor out of the
+	// DOM. Switching notes remounts the component via {#key}, which is where a
+	// fresh document legitimately comes from.
+	// svelte-ignore state_referenced_locally
+	const firstPaint = html;
+
 	let element: HTMLDivElement | undefined = $state();
 	let editor = $state<TiptapEditor | null>(null);
 	// Counts every transaction — the toolbar hangs off it to re-read isActive().
@@ -232,7 +241,7 @@
 
 	<div class="tt-content" bind:this={element}>
 		<!-- eslint-disable-next-line svelte/no-at-html-tags — own document, server-rendered -->
-		{@html html}
+		{@html firstPaint}
 	</div>
 </div>
 
