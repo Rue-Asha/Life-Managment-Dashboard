@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { confirmEnhance } from '$lib/confirm';
 	import { UNI_TYPES, courseColor, prioColor, prioLabel, typeColor, type UniType } from '$lib/labels';
 	import { dueColor, dueLabel, fmtDay } from '$lib/format';
 
@@ -122,11 +123,7 @@
 		<form
 			method="POST"
 			action="?/deleteSemester"
-			use:enhance
-			onsubmit={(e) => {
-				const sm = data.semesters.find((s) => s.id === data.semId);
-				if (!window.confirm(`Delete semester "${sm?.name}" and all its courses?`)) e.preventDefault();
-			}}
+			use:confirmEnhance={`Delete semester "${data.semesters.find((s) => s.id === data.semId)?.name ?? ''}", all its courses and their tasks? This cannot be undone.`}
 		>
 			<input type="hidden" name="id" value={data.semId} />
 			<button class="btn-text" style="color:var(--faint);letter-spacing:0.16em;font-size:9px">DELETE SEMESTER</button>

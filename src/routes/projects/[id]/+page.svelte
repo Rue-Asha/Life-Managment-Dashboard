@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { autosave, quietEnhance } from '$lib/autosave';
+	import { confirmEnhance } from '$lib/confirm';
 	import { PROJECT_STATUSES, PROJECT_STATUS_META } from '$lib/labels';
 
 	let { data } = $props();
@@ -27,7 +28,12 @@
 			{/each}
 		</select>
 	</form>
-	<form class="spacer" method="POST" action="?/delete" use:enhance>
+	<form
+		class="spacer"
+		method="POST"
+		action="?/delete"
+		use:confirmEnhance={`Delete project "${p.name}", its notes and all ${data.tasks.length} steps? This cannot be undone.`}
+	>
 		<button class="btn-text">delete project</button>
 	</form>
 </div>

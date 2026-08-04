@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { autosave, quietEnhance } from '$lib/autosave';
+	import { confirmEnhance } from '$lib/confirm';
 	import { COURSE_HUES, courseColor, typeColor } from '$lib/labels';
 	import { dueColor, dueLabel } from '$lib/format';
 
@@ -17,10 +18,7 @@
 		class="spacer"
 		method="POST"
 		action="?/delete"
-		use:enhance
-		onsubmit={(e) => {
-			if (!window.confirm(`Delete course "${c.name}" and all its tasks?`)) e.preventDefault();
-		}}
+		use:confirmEnhance={`Delete course "${c.name}" and all its tasks? This cannot be undone.`}
 	>
 		<button class="btn-text">delete course</button>
 	</form>

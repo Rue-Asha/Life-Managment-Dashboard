@@ -40,6 +40,9 @@
 	async function clear(e: MouseEvent) {
 		e.preventDefault();
 		e.stopPropagation();
+		// The ✕ sits on top of the image, so a mis-aimed click would otherwise
+		// drop the upload with no way back.
+		if (!window.confirm('Remove this image?')) return;
 		await fetch(`/api/images/${slot}`, { method: 'DELETE' });
 		localHas = false;
 	}
@@ -65,7 +68,7 @@
 >
 	{#if shown}
 		<img src={`/api/images/${slot}?v=${version}`} alt="" />
-		<button type="button" class="clear" title="Bild entfernen" onclick={clear}>✕</button>
+		<button type="button" class="clear" title="Remove image" onclick={clear}>✕</button>
 	{:else}
 		<button type="button" class="ph" onclick={() => fileInput?.click()}>
 			{placeholder}

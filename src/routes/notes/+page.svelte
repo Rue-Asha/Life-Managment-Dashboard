@@ -5,6 +5,7 @@
 	import ImageSlot from '$lib/ImageSlot.svelte';
 	import NoteEditor from '$lib/editor/NoteEditor.svelte';
 	import { autosave, quietEnhance } from '$lib/autosave';
+	import { confirmEnhance } from '$lib/confirm';
 	import { INBOX_COLOR, NOTE_KIND_LABEL, folderColor } from '$lib/labels';
 	import { wordCount } from '$lib/editor/doc';
 	import { fmtDay } from '$lib/format';
@@ -161,7 +162,12 @@
 						{#if fo.canDelete}
 							<span class="fops">
 								<button type="button" title="rename" onclick={() => promptRename(fo.id!, fo.name)}>✎</button>
-								<form method="POST" action="?/deleteFolder" use:enhance style="display:contents">
+								<form
+									method="POST"
+									action="?/deleteFolder"
+									use:confirmEnhance={`Delete folder "${fo.name}"? The notes in it move to "No folder".`}
+									style="display:contents"
+								>
 									<input type="hidden" name="id" value={fo.id} />
 									<button class="danger" title="Delete folder">✕</button>
 								</form>
@@ -206,7 +212,12 @@
 						</select>
 					</form>
 					<span class="meta">UPDATED {fmtDay(note.updated_at.slice(0, 10)).toUpperCase()} · {words} WORDS</span>
-					<form method="POST" action="?/deleteNote" use:enhance style="margin-left:auto">
+					<form
+						method="POST"
+						action="?/deleteNote"
+						use:confirmEnhance={`Delete note "${note.title || 'Untitled'}"? This cannot be undone.`}
+						style="margin-left:auto"
+					>
 						<input type="hidden" name="id" value={note.id} />
 						<button class="btn-text">delete</button>
 					</form>
