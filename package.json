@@ -1,7 +1,7 @@
 {
 	"name": "life-management-dashboard",
 	"private": true,
-	"version": "2.2.2",
+	"version": "2.3.1",
 	"type": "module",
 	"engines": {
 		"node": ">=22"
