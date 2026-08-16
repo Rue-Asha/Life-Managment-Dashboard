@@ -1,0 +1,58 @@
+name: CI
+
+# Nothing here deploys. This decides which commits and tags are worth
+# deploying — the playbook in Homelab-Managment still does the deploying, by
+# hand, against a tag a human picks.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A superseded run on the same ref answers a question nobody is asking any more.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Node 22 mirrors the deploy host (`nodejs_version` in Homelab-Managment),
+      # deliberately not "whatever is newest". A gate that runs on a different
+      # runtime than production proves something about the wrong machine.
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      # `ci`, not `install`: resolves strictly from package-lock.json and fails
+      # if the lockfile and package.json have drifted apart. Same command the
+      # deploy runs, so a green build here means the deploy installs the same
+      # tree.
+      - name: Install dependencies
+        run: npm ci
+
+      # The actual gate. `vite build` transpiles types away without checking
+      # them, so without this step a type error deploys perfectly happily.
+      - name: Type-check
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+
+      # Migrations are forward-only, so the property worth proving is that a
+      # database can still be built from zero — including the date-prefixed
+      # files that have to sort after the older numbered ones.
+      - name: Apply migrations to a scratch database
+        env:
+          DATABASE_PATH: ${{ runner.temp }}/ci.db
+        run: npm run db:migrate
