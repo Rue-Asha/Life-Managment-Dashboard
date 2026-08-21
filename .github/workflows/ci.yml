@@ -13,10 +13,13 @@ on:
 permissions:
   contents: read
 
-# A superseded run on the same ref answers a question nobody is asking any more.
+# A superseded run on the same PR answers a question nobody is asking any more.
+# Pushes to main and v* tags are exempt: those are the refs a human later picks
+# to deploy, and a cancelled run leaves such a commit with no verdict at all —
+# not green, not red, and never re-run.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
@@ -52,7 +55,40 @@ jobs:
       # Migrations are forward-only, so the property worth proving is that a
       # database can still be built from zero — including the date-prefixed
       # files that have to sort after the older numbered ones.
+      #
+      # This is the deploy-host runner (scripts/migrate.mjs). It exits 0 on an
+      # empty migrations directory, so the count is checked separately.
       - name: Apply migrations to a scratch database
         env:
           DATABASE_PATH: ${{ runner.temp }}/ci.db
-        run: npm run db:migrate
+        run: |
+          npm run db:migrate
+          node scripts/check-migrations.mjs
+
+      # The other runner: src/lib/server/migrate.ts, bundled into the build and
+      # called from getDb() on first connection. That is what actually migrates
+      # production, and it is a separate code path from the .mjs above — same
+      # files, own glob and own sort. Booting the build against an empty
+      # database is the only way to exercise it, so drift between the two gets
+      # caught here instead of on the deploy host.
+      - name: Self-migrate the built server from an empty database
+        env:
+          DATABASE_PATH: ${{ runner.temp }}/boot.db
+          HOST: 127.0.0.1
+          PORT: '3000'
+        run: |
+          node build &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:3000/; then
+              break
+            fi
+            sleep 1
+          done
+          # Unconditional, so a server that never came up fails the step rather
+          # than falling through to a check against a database nobody opened.
+          curl -fsS -o /dev/null http://127.0.0.1:3000/
+          kill "$server" 2>/dev/null || true
+          wait "$server" 2>/dev/null || true
+          node scripts/check-migrations.mjs

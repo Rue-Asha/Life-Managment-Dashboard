@@ -30,6 +30,8 @@ const applied = new Set(
 	db.prepare('SELECT version FROM schema_migrations').all().map((row) => row.version)
 );
 
+// Bare `.sort()` is code-unit order; src/lib/server/migrate.ts sorts the same
+// way on purpose. Keep them identical — see the comment there.
 const pending = readdirSync(migrationsDir)
 	.filter((file) => file.endsWith('.sql'))
 	.sort()

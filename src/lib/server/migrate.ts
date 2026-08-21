@@ -34,9 +34,14 @@ export function runMigrations(db: DatabaseSync): void {
 		)
 	);
 
+	// Code-unit order, matching the bare `.sort()` in scripts/migrate.mjs. Not
+	// localeCompare: that collates by locale, so it can order two same-date
+	// migrations differently from the .mjs runner — and differently again on a
+	// host with another LANG. The two runners have to agree on the order or a
+	// deploy applies migrations in an order CI never exercised.
 	const files = Object.keys(modules)
 		.map((path) => ({ name: path.split('/').pop() as string, sql: modules[path] }))
-		.sort((a, b) => a.name.localeCompare(b.name));
+		.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
 	for (const { name, sql } of files) {
 		if (applied.has(name)) continue;
